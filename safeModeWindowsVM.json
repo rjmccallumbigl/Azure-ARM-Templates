@@ -36,6 +36,20 @@
             "metadata": {
                 "description": "DNS name for the public IP"
             }
+        },
+        "storageUri": {
+            "defaultValue": "[format('store{0}', uniqueString(resourceGroup().id))]",
+            "type": "string",
+            "metadata": {
+                "description": "Name of storage account For Boot Diagnostics"
+            }
+        },
+        "storageAccountType": {
+            "type": "string",
+            "defaultValue": "Standard_LRS",
+            "metadata": {
+                "description": "Storage Account type"
+            }
         }
     },
     "variables": {
@@ -139,6 +153,17 @@
             }
         },
         {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2021-06-01",
+            "name": "[parameters('storageUri')]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "[parameters('storageAccountType')]"
+            },
+            "kind": "StorageV2",
+            "properties": {}
+        },
+        {
             "type": "Microsoft.Compute/virtualMachines",
             "apiVersion": "2020-12-01",
             "name": "[variables('vmName')]",
@@ -164,9 +189,9 @@
                     },
                     "osDisk": {
                         "createOption": "FromImage",
-            "managedDisk": {
-              "storageAccountType": "StandardSSD_LRS"
-            }
+                        "managedDisk": {
+                            "storageAccountType": "StandardSSD_LRS"
+                        }
                     }
                 },
                 "networkProfile": {
@@ -175,6 +200,12 @@
                             "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
                         }
                     ]
+                },
+                "diagnosticsProfile": {
+                    "bootDiagnostics": {
+                        "enabled": true,
+                        "storageUri": "[concat('https://', parameters('storageUri'), '.blob.core.windows.net')]"
+                    }
                 }
             },
             "resources": [
