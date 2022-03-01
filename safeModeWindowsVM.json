@@ -58,7 +58,7 @@
         "subnetName": "Subnet",
         "subnetPrefix": "10.0.0.0/24",
         "subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]",
-        "vmName": "MyVM",
+        "vmName": "safeModeVM",
         "virtualNetworkName": "MyVNET",
         "publicIPAddressName": "myPublicIP",
         "networkSecurityGroupName": "default-NSG"
