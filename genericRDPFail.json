@@ -223,7 +223,7 @@
                         "typeHandlerVersion": "1.8",
                         "autoUpgradeMinorVersion": true,
                         "settings": {
-                            "commandToExecute": "reg add \"HKLM\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server\" /v fDenyTSConnections /t REG_DWORD /d 1 /f"
+                            "commandToExecute": "powershell Set-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\control\\Terminal Server' -name 'fDenyTSConnections' -value 1 -Type Dword; powershell.exe Restart-Computer -Force"
                         }
                     }
                 }
