@@ -40,7 +40,7 @@
 		"storageUri": {
 			"defaultValue": "[format('store{0}', uniqueString(resourceGroup().id))]",
 			"type": "string",
-			"metadata":{
+			"metadata": {
 				"description": "Name of storage account For Boot Diagnostics"
 			}
 		},
@@ -58,7 +58,7 @@
 		"subnetName": "Subnet",
 		"subnetPrefix": "10.0.0.0/24",
 		"subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]",
-		"vmName": "brokenGA",
+		"vmName": "gaBroken",
 		"virtualNetworkName": "MyVNET",
 		"publicIPAddressName": "myPublicIP",
 		"networkSecurityGroupName": "default-NSG"
@@ -206,7 +206,7 @@
 						"enabled": true,
 						"storageUri": "[concat('https://', parameters('storageUri'), '.blob.core.windows.net')]"
 					}
-				}			
+				}
 			},
 			"resources": [
 				{
@@ -223,12 +223,7 @@
 						"typeHandlerVersion": "1.8",
 						"autoUpgradeMinorVersion": true,
 						"settings": {
-							"fileUris": [
-								"https://raw.githubusercontent.com/rjmccallumbigl/PowerShell-break-Azure-VMs/main/agent.ps1"
-							]
-						},
-						"protectedSettings": {
-							"commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -File agent.ps1')]"
+							"commandToExecute": "powershell Register-ScheduledTask -TaskName 'BreakGA' -Setting (New-ScheduledTaskSettingsSet -StartWhenAvailable) -Trigger (New-ScheduledTaskTrigger -AtLogOn) -User \"gaBroken\\AzureAdmin\" -Action (New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-NoProfile -WindowStyle Hidden -command \"& { cmd /c \"sc config rdagent start= disabled\"; cmd /c \"sc stop rdagent\"; cmd /c \"sc config WindowsAzureGuestAgent start= disabled\"; cmd /c \"sc stop WindowsAzureGuestAgent\" }\"') -RunLevel Highest –Force; schtasks /Run /tn BreakGA"
 						}
 					}
 				}
