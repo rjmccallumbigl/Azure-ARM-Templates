@@ -3,14 +3,12 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "adminUsername": {
-            "defaultValue": "AzureAdmin",
             "type": "String",
             "metadata": {
                 "description": "Username for the Virtual Machine."
             }
         },
         "adminPassword": {
-            "defaultValue": "WelcometoAzure1!",
             "type": "SecureString",
             "metadata": {
                 "description": "Password for the Virtual Machine."
@@ -24,7 +22,7 @@
             }
         },
         "vmSize": {
-            "defaultValue": "Standard_D8s_v3",
+            "defaultValue": "Standard_D2s_v3",
             "type": "String",
             "metadata": {
                 "description": "Default VM Size"
