@@ -189,8 +189,7 @@
                         "createOption": "FromImage",
                         "managedDisk": {
                             "storageAccountType": "StandardSSD_LRS"
-                        },
-						"diskSizeGB": 2000
+                        }
                     }
                 },
                 "networkProfile": {
