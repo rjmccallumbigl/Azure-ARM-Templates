@@ -7,7 +7,8 @@ steps:
     path: ./
     
 - name: Test result - path
-  shell: bash
-  continue-on-error: true
-  run: |
-    echo "${{ toJSON(fromJSON(steps.pathtest.outputs.results)) }}"
+on: push
+shell: bash
+continue-on-error: true
+run: |
+echo "${{ toJSON(fromJSON(steps.pathtest.outputs.results)) }}"
