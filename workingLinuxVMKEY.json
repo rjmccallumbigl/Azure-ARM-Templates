@@ -1,0 +1,235 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"adminUsername": {
+			"type": "String",
+			"metadata": {
+				"description": "Username for the Virtual Machine."
+			}
+		},
+		"adminPublicKey": {
+			"type": "SecureString",
+			"metadata": {
+				"description": "Specifies the SSH rsa public key file as a string. Use \"ssh-keygen -t rsa -b 2048\" to generate your SSH key pairs."
+			}
+		},
+		"location": {
+			"defaultValue": "[resourceGroup().location]",
+			"type": "String",
+			"metadata": {
+				"description": "Location for all resources."
+			}
+		},
+		"vmSize": {
+			"defaultValue": "Standard_D2s_v3",
+			"type": "String",
+			"metadata": {
+				"description": "Default VM Size"
+			}
+		},
+		"dnsNameForPublicIP": {
+			"defaultValue": "[tolower(concat('dns', uniquestring(resourceGroup().id)))]",
+			"type": "String",
+			"metadata": {
+				"description": "DNS name for the public IP"
+			}
+		},
+		"storageUri": {
+			"defaultValue": "[format('store{0}', uniqueString(resourceGroup().id))]",
+			"type": "string",
+			"metadata": {
+				"description": "Name of storage account For Boot Diagnostics"
+			}
+		},
+		"storageAccountType": {
+			"type": "string",
+			"defaultValue": "Standard_LRS",
+			"metadata": {
+				"description": "Storage Account type"
+			}
+		}
+	},
+	"variables": {
+		"nicName": "myVMNic",
+		"addressPrefix": "10.0.0.0/16",
+		"subnetName": "Subnet",
+		"subnetPrefix": "10.0.0.0/24",
+		"subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]",
+		"vmName": "MyVM",
+		"virtualNetworkName": "MyVNET",
+		"publicIPAddressName": "myPublicIP",
+		"networkSecurityGroupName": "default-NSG"
+	},
+	"resources": [
+		{
+			"type": "Microsoft.Network/publicIPAddresses",
+			"apiVersion": "2020-08-01",
+			"name": "[variables('publicIPAddressName')]",
+			"location": "[parameters('location')]",
+			"properties": {
+				"publicIPAllocationMethod": "Dynamic",
+				"dnsSettings": {
+					"domainNameLabel": "[parameters('dnsNameForPublicIP')]"
+				}
+			}
+		},
+		{
+			"type": "Microsoft.Network/networkSecurityGroups",
+			"apiVersion": "2020-08-01",
+			"name": "[variables('networkSecurityGroupName')]",
+			"location": "[parameters('location')]",
+			"properties": {
+				"securityRules": [
+					{
+						"name": "default-allow-22",
+						"properties": {
+							"priority": 1000,
+							"access": "Allow",
+							"direction": "Inbound",
+							"destinationPortRange": "22",
+							"protocol": "Tcp",
+							"sourceAddressPrefix": "*",
+							"sourcePortRange": "*",
+							"destinationAddressPrefix": "*"
+						}
+					}
+				]
+			}
+		},
+		{
+			"type": "Microsoft.Network/virtualNetworks",
+			"apiVersion": "2020-08-01",
+			"name": "[variables('virtualNetworkName')]",
+			"location": "[parameters('location')]",
+			"dependsOn": [
+				"[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+			],
+			"properties": {
+				"addressSpace": {
+					"addressPrefixes": [
+						"[variables('addressPrefix')]"
+					]
+				},
+				"subnets": [
+					{
+						"name": "[variables('subnetName')]",
+						"properties": {
+							"addressPrefix": "[variables('subnetPrefix')]",
+							"networkSecurityGroup": {
+								"id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"type": "Microsoft.Network/networkInterfaces",
+			"apiVersion": "2020-08-01",
+			"name": "[variables('nicName')]",
+			"location": "[parameters('location')]",
+			"dependsOn": [
+				"[variables('publicIPAddressName')]",
+				"[variables('virtualNetworkName')]"
+			],
+			"properties": {
+				"ipConfigurations": [
+					{
+						"name": "ipconfig1",
+						"properties": {
+							"privateIPAllocationMethod": "Dynamic",
+							"publicIPAddress": {
+								"id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+							},
+							"subnet": {
+								"id": "[variables('subnetRef')]"
+							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"type": "Microsoft.Storage/storageAccounts",
+			"apiVersion": "2021-06-01",
+			"name": "[parameters('storageUri')]",
+			"location": "[parameters('location')]",
+			"sku": {
+				"name": "[parameters('storageAccountType')]"
+			},
+			"kind": "StorageV2",
+			"properties": {}
+		},
+		{
+			"type": "Microsoft.Compute/virtualMachines",
+			"apiVersion": "2020-12-01",
+			"name": "[variables('vmName')]",
+			"location": "[parameters('location')]",
+			"dependsOn": [
+				"[variables('nicName')]"
+			],
+			"properties": {
+				"hardwareProfile": {
+					"vmSize": "[parameters('vmSize')]"
+				},
+				"osProfile": {
+					"computerName": "[variables('vmName')]",
+					"adminUsername": "[parameters('adminUsername')]",
+					"linuxConfiguration": {
+						"disablePasswordAuthentication": true,
+						"ssh": {
+							"publicKeys": [
+								{
+									"path": "[concat('/home/', parameters('adminUsername'), '/.ssh/authorized_keys')]",
+									"keyData": "[parameters('adminPublicKey')]"
+								}
+							]
+						}
+					}
+				},
+				"storageProfile": {
+					"imageReference": {
+						"publisher": "RedHat",
+						"offer": "rhel-raw",
+						"sku": "8-raw",
+						"version": "latest"
+					},
+					"osDisk": {
+						"createOption": "FromImage",
+						"managedDisk": {
+							"storageAccountType": "StandardSSD_LRS"
+						}
+					}
+				},
+				"networkProfile": {
+					"networkInterfaces": [
+						{
+							"id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
+						}
+					]
+				},
+				"diagnosticsProfile": {
+					"bootDiagnostics": {
+						"enabled": true,
+						"storageUri": "[concat('https://', parameters('storageUri'), '.blob.core.windows.net')]"
+					}
+				}
+			}
+		}
+	],
+	"outputs": {
+		"adminUsername": {
+			"type": "string",
+			"value": "[parameters('adminUsername')]"
+		},
+		"hostname": {
+			"type": "string",
+			"value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))).dnsSettings.fqdn]"
+		},
+		"sshCommand": {
+			"type": "string",
+			"value": "[format('ssh {0}@{1}', parameters('adminUsername'), reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))).dnsSettings.fqdn)]"
+		}
+	}
+}
