@@ -114,29 +114,6 @@
           }
         }
       }
-    },
-    {
-
-      "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(parameters('vmName'),'/BGInfo')]",
-      "apiVersion": "2017-03-30",
-      "scale": null,
-      "location": "[parameters('SharedVmConfig').location]",
-      "dependsOn": [
-        "[parameters('vmName')]"
-      ],
-      "properties": {
-
-        "publisher": "Microsoft.Compute",
-        "type": "BGInfo",
-        "typeHandlerVersion": "2.1",
-        "autoUpgradeMinorVersion": true,
-        "settings": {
-          "properties": []
-        }
-
-      }
-
     }
   ],
   "outputs": {}
