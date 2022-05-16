@@ -18,9 +18,6 @@
     },
     "serverOS": {
       "type": "string",
-      "allowedValues": [
-        "2012-R2-Datacenter", "2016-Datacenter"
-      ],
       "metadata": {
         "description": "The OS of application servers in your deployment."
       },
@@ -43,7 +40,7 @@
       "metadata": {
         "description": "Select a VM size for all VMs in your deployment."
       },
-      "defaultValue": "Standard_DS2_v3"
+      "defaultValue": "Standard_D2s_v3"
     },
     "dnsLabelPrefix": {
       "defaultValue": "[tolower(concat('dns', uniquestring(resourceGroup().id)))]",
@@ -284,8 +281,8 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
-          "SharedVmConfig": { 
-            "value": "[variables('SharedVmConfig')]" 
+          "SharedVmConfig": {
+            "value": "[variables('SharedVmConfig')]"
           },
           "vmName": {
             "value": "[variables('VMs').adVmName]"
@@ -318,8 +315,8 @@
           "contentVersion": "1.0.0.0"
         },
         "parameters": {
-          "SharedVmConfig": { 
-            "value": "[variables('SharedVmConfig')]" 
+          "SharedVmConfig": {
+            "value": "[variables('SharedVmConfig')]"
           },
           "vmName": {
             "value": "[variables('VMs').appVmName]"
