@@ -54,7 +54,7 @@
       "metadata": {
         "description": "Auto-generated container in staging storage account to receive post-build staging folder upload."
       },
-      "defaultValue": "https://raw.githubusercontent.com/maxskunkworks/tlg/master/tlg-base-config_3-vm"
+      "defaultValue": "https://raw.githubusercontent.com/rjmccallumbigl/Azure-ARM-Templates/main"
     },
     "_artifactsLocationSasToken": {
       "type": "securestring",
