@@ -262,20 +262,12 @@
 			],
 			"properties": {
 				"source": {
-					"script": "[concat(
-					'New-ADUser -Name \"', 
-					parameters('domainAccountUsername'), 
-					'\" -Accountpassword (ConvertTo-SecureString -AsPlainText -Force \"',
-					parameters('adminPassword'), '\") -Enabled $true;',
-					'get-aduser -Filter \"Name -like \"\"',
-					parameters('domainAccountUsername'),
-					'\"\"\" | Enable-ADAccount')]"
-				},
+					"script": "[concat('New-ADUser -Name \"', parameters('domainAccountUsername'), '\" -Accountpassword (ConvertTo-SecureString -AsPlainText -Force \"', parameters('adminPassword'), '\") -Enabled $true;', 'get-aduser -Filter \"Name -like \"\"', parameters('domainAccountUsername'), '\"\"\" | Enable-ADAccount')]"
+					},
 				"timeoutInSeconds": 60
 			}
 		}
 	],
-
 	"outputs": {
 		"DcPublicIpAddress": {
 			"type": "string",
