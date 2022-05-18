@@ -345,7 +345,7 @@
 			"apiVersion": "2019-12-01",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
-				"[concat('Microsoft.Compute/virtualMachines/', 'DC1')]"
+				"[variables('VMs')]"
 			],
 			"properties": {
 				"source": {
