@@ -29,6 +29,12 @@
 				"description": "The name of the domain administrator account to create, i.e. globaladmin. This will also be used to create a local admin account on each VMs."
 			}
 		},
+		"domainAccountUsername": {
+			"type": "string",
+			"metadata": {
+				"description": "The name of a domain user to create, i.e. globaluser. Will use the same password as the admin user for convenience."
+			}
+		},
 		"adminPassword": {
 			"type": "securestring",
 			"metadata": {
@@ -331,6 +337,21 @@
 						"value": "[variables('VMs').appConfigurationFunction]"
 					}
 				}
+			}
+		},
+		{
+			"type": "Microsoft.Compute/virtualMachines/runCommands",
+			"name": "[concat('DC1','/firstRunCommand')]",
+			"apiVersion": "2019-12-01",
+			"location": "[resourceGroup().location]",
+			"dependsOn": [
+				"[concat('Microsoft.Compute/virtualMachines/', 'DC1')]"
+			],
+			"properties": {
+				"source": {
+					"script": "[concat('New-ADUser -Name \"', parameters('domainAccountUsername'), '\"  -Accountpassword (ConvertTo-SecureString -AsPlainText -Force \"', parameters('adminPassword'), '\") -Enabled $true')]"
+				},
+				"timeoutInSeconds": 60
 			}
 		}
 	],
