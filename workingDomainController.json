@@ -29,12 +29,6 @@
 				"description": "The name of the domain administrator account to create, i.e. globaladmin. This will also be used to create a local admin account on each VMs."
 			}
 		},
-		"domainAccountUsername": {
-			"type": "string",
-			"metadata": {
-				"description": "The name of a domain user to create, i.e. globaluser. Will use the same password as the admin user for convenience."
-			}
-		},
 		"adminPassword": {
 			"type": "securestring",
 			"metadata": {
@@ -70,22 +64,18 @@
 			"defaultValue": ""
 		}
 	},
-
 	"variables": {
-
 		"shortDomainName": "[first(split(parameters('domainName'),'.'))]",
 		"domainUserName": "[concat(variables('shortDomainName'),'\\',parameters('adminUsername'))]",
 		"assetLocation": "[concat(parameters('_artifactsLocation'),'/DSC')]",
 		"templates": "[concat(parameters('_artifactsLocation'),'/nested')]",
 		"storageAccountName": "[concat(uniqueString(resourceGroup().id),'storage')]",
-
 		"network": {
 			"vnetName": "[concat(parameters('configName'),'-VNET')]",
 			"subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', concat(parameters('configName'),'-VNET'), 'subnet-01')]",
 			"subnet": "10.0.0.0/8",
 			"nsgName": "[concat(parameters('configName'),'-NSG')]"
 		},
-
 		"VMs": {
 			"adVmName": "DC1",
 			"adConfigurationFunction": {
@@ -94,7 +84,6 @@
 			"adNicIP": "10.0.0.10",
 			"adPublicIpName": "[concat(parameters('configName'),'-AD_IP')]"
 		},
-
 		"SharedVmConfig": {
 			"location": "[resourceGroup().location]",
 			"vmSize": "[parameters('vmSize')]",
@@ -107,7 +96,6 @@
 			"domainName": "[parameters('domainName')]"
 		}
 	},
-
 	"resources": [
 		{
 			"apiVersion": "2018-01-01",
@@ -250,21 +238,6 @@
 						"value": "[variables('VMs').adConfigurationFunction]"
 					}
 				}
-			}
-		},
-		{
-			"type": "Microsoft.Compute/virtualMachines/runCommands",
-			"name": "[concat('DC1','/firstRunCommand')]",
-			"apiVersion": "2021-11-01",
-			"location": "[resourceGroup().location]",
-			"dependsOn": [
-				"Microsoft.Resources/deployments/ADDC"
-			],
-			"properties": {
-				"source": {
-					"script": "[concat('New-ADUser -Name \"', parameters('domainAccountUsername'), '\" -Accountpassword (ConvertTo-SecureString -AsPlainText -Force \"', parameters('adminPassword'), '\") -Enabled $true;', 'get-aduser -Filter \"Name -like \"\"', parameters('domainAccountUsername'), '\"\"\" | Enable-ADAccount')]"
-					},
-				"timeoutInSeconds": 60
 			}
 		}
 	],
