@@ -29,16 +29,22 @@
 				"description": "The name of the domain administrator account to create, i.e. globaladmin. This will also be used to create a local admin account on each VMs."
 			}
 		},
-		"domainAccountUsername": {
-			"type": "string",
-			"metadata": {
-				"description": "The name of a domain user to create, i.e. globaluser. Will use the same password as the admin user for convenience."
-			}
-		},
 		"adminPassword": {
 			"type": "securestring",
 			"metadata": {
 				"description": "The administrator account password."
+			}
+		},
+		"domainAccountUsername": {
+			"type": "string",
+			"metadata": {
+				"description": "The name of a domain user to create, i.e. globaluser."
+			}
+		},
+		"domainAccountPassword": {
+			"type": "securestring",
+			"metadata": {
+				"description": "The domain user account password."
 			}
 		},
 		"vmSize": {
@@ -262,8 +268,8 @@
 			],
 			"properties": {
 				"source": {
-					"script": "[concat('New-ADUser -Name \"', parameters('domainAccountUsername'), '\" -Accountpassword (ConvertTo-SecureString -AsPlainText -Force \"', parameters('adminPassword'), '\") -Enabled $true;', 'get-aduser -Filter \"Name -like \"\"', parameters('domainAccountUsername'), '\"\"\" | Enable-ADAccount')]"
-					},
+					"script": "[concat('$pass=(ConvertTo-SecureString -AsPlainText -Force \"', parameters('domainAccountPassword'), '\"); New-ADUser -Name \"', parameters('domainAccountUsername'), '\" -Accountpassword $pass -Enabled $true;', 'get-aduser -Filter \"Name -like \"\"', parameters('domainAccountUsername'), '\"\"\" | Enable-ADAccount')]"
+				},
 				"timeoutInSeconds": 60
 			}
 		}
