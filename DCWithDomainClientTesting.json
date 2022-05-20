@@ -264,9 +264,12 @@
 			"apiVersion": "2021-11-01",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
-				"Microsoft.Resources/deployments/ADDC"
+				"Microsoft.Resources/deployments/ADDC",
+				"[variables('VMs').adVmName]"
 			],
 			"properties": {
+				"protectedParameters": "",
+				
 				"source": {
 					"script": "[concat('$pass=(ConvertTo-SecureString -AsPlainText -Force \"', parameters('domainAccountPassword'), '\"); New-ADUser -Name \"', parameters('domainAccountUsername'), '\" -Accountpassword $pass -Enabled $true;', 'get-aduser -Filter \"Name -like \"\"', parameters('domainAccountUsername'), '\"\"\" | Enable-ADAccount')]"
 				},
