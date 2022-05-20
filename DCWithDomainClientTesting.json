@@ -259,12 +259,28 @@
 			}
 		},
 		{
+			"type": "Microsoft.Resources/deploymentScripts",
+			"apiVersion": "2020-10-01",
+			"kind": "AzurePowerShell",
+			"name": "WaitSection",
+			"location": "[resourceGroup().location]",
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'ADDC')]"
+			],
+			"properties": {
+				"azPowerShellVersion": "3.0",
+				"scriptContent": "start-sleep -Seconds 300",
+				"cleanupPreference": "Always",
+				"retentionInterval": "PT1H"
+			}
+		},
+		{
 			"type": "Microsoft.Compute/virtualMachines/runCommands",
 			"name": "[concat('DC1','/firstRunCommand')]",
 			"apiVersion": "2021-11-01",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
-				"[resourceId('Microsoft.Resources/deployments', 'ADDC')]"
+				"[resourceId('Microsoft.Resources/deploymentScripts', 'WaitSection')]"
 			],
 			"properties": {
 				"protectedParameters": "",
