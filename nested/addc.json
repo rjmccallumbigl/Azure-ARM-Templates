@@ -83,7 +83,7 @@
             "autoUpgradeMinorVersion": true,
             "settings": {
               // "commandToExecute": "$pass=(ConvertTo-SecureString -AsPlainText -Force ${Env:Password}); $name=${Env:UserName}; New-ADUser -Name $name -Accountpassword $pass -Enabled $true; get-aduser -Filter \"Name -like '$name'\" | Enable-ADAccount;"
-              "commandToExecute": "[concat('powershell \"$pass=(ConvertTo-SecureString -AsPlainText -Force ''', parameters('SharedVmConfig').domainPassword, '''); $name=''',parameters('SharedVmConfig').domainUsername,'''; New-ADUser -Name $name -Accountpassword $pass -Enabled $true; get-aduser -Filter \"\"\"Name -like ''$name'' \"\"\" | Enable-ADAccount; \"')]"
+              "commandToExecute": "[concat('powershell \"$pass=(ConvertTo-SecureString -AsPlainText -Force ''', parameters('SharedVmConfig').domainPassword, '''); $name=''',parameters('SharedVmConfig').createdDomainUserName,'''; New-ADUser -Name $name -Accountpassword $pass -Enabled $true; get-aduser -Filter \"\"\"Name -like ''$name'' \"\"\" | Enable-ADAccount; \"')]"
             }
           }
         }

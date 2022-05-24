@@ -106,6 +106,7 @@
 			"vmSize": "[parameters('vmSize')]",
 			"serverOS": "[parameters('serverOS')]",
 			"domainUsername": "[variables('domainUsername')]",
+			"createdDomainUserName": "[parameters('domainAccountUsername')]",
 			"adminUsername": "[parameters('adminUsername')]",
 			"adminPassword": "[parameters('adminPassword')]",
 			"domainPassword": "[parameters('domainAccountPassword')]",
