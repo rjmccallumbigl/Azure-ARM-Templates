@@ -73,7 +73,8 @@
           "name": "CustomScriptExtension",
           "location": "[parameters('SharedVmConfig').location]",
           "dependsOn": [
-            "[parameters('vmName')]"
+            "[parameters('vmName')]",
+            "[concat(parameters('vmName'),'/InstallDomainController')]"
           ],
           "properties": {
             "publisher": "Microsoft.Compute",
