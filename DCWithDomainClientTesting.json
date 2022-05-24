@@ -108,6 +108,7 @@
 			"domainUsername": "[variables('domainUsername')]",
 			"adminUsername": "[parameters('adminUsername')]",
 			"adminPassword": "[parameters('adminPassword')]",
+			"domainPassword": "[parameters('domainAccountPassword')]",
 			"storageAccountNamePrefix": "[variables('storageAccountName')]",
 			"sasToken": "[parameters('_artifactsLocationSasToken')]",
 			"domainName": "[parameters('domainName')]"
@@ -256,32 +257,6 @@
 						"value": "[variables('VMs').adConfigurationFunction]"
 					}
 				}
-			}
-		},
-		{
-			"type": "Microsoft.Resources/deploymentScripts",
-			"apiVersion": "2020-10-01",
-			"kind": "AzurePowerShell",
-			"name": "runPowerShellInline",
-			"location": "[resourceGroup().location]",
-			"dependsOn": [
-				"[resourceId('Microsoft.Resources/deployments', 'ADDC')]"
-			],
-			"properties": {
-				"environmentVariables":[
-					{
-						"name": "UserName",
-						"value": "[parameters('domainAccountUsername')]"
-					},
-					{
-						"name": "Password",
-						"secureValue": "[parameters('domainAccountPassword')]"
-					}
-				],
-				"azPowerShellVersion": "6.4",
-				"scriptContent": "$pass=(ConvertTo-SecureString -AsPlainText -Force ${Env:Password}); $name=${Env:UserName}; New-ADUser -Name $name -Accountpassword $pass -Enabled $true; get-aduser -Filter \"Name -like '$name'\" | Enable-ADAccount;",
-				"cleanupPreference": "OnSuccess",
-				"retentionInterval": "P1D"
 			}
 		}
 	],

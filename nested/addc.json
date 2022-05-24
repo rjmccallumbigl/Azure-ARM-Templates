@@ -66,7 +66,27 @@
           }
         }
       },
-      "resources": []
+      "resources": [
+        {
+          "type": "extensions",
+          "apiVersion": "2020-12-01",
+          "name": "CustomScriptExtension",
+          "location": "[parameters('SharedVmConfig').location]",
+          "dependsOn": [
+            "[parameters('vmName')]"
+          ],
+          "properties": {
+            "publisher": "Microsoft.Compute",
+            "type": "CustomScriptExtension",
+            "typeHandlerVersion": "1.8",
+            "autoUpgradeMinorVersion": true,
+            "settings": {
+              // "commandToExecute": "$pass=(ConvertTo-SecureString -AsPlainText -Force ${Env:Password}); $name=${Env:UserName}; New-ADUser -Name $name -Accountpassword $pass -Enabled $true; get-aduser -Filter \"Name -like '$name'\" | Enable-ADAccount;"
+              "commandToExecute": "[concat('powershell \"$pass=(ConvertTo-SecureString -AsPlainText -Force ''', parameters('SharedVmConfig').domainPassword, '''); $name=''',parameters('SharedVmConfig').domainUsername,'''; New-ADUser -Name $name -Accountpassword $pass -Enabled $true; get-aduser -Filter \"\"\"Name -like ''$name'' \"\"\" | Enable-ADAccount; \"')]"
+            }
+          }
+        }
+      ]
     },
     {
       "type": "Microsoft.Compute/virtualMachines/extensions",
