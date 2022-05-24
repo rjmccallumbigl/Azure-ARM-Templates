@@ -73,7 +73,7 @@
           "name": "CustomScriptExtension",
           "location": "[parameters('SharedVmConfig').location]",
           "dependsOn": [            
-            "[resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('vmName'), 'InstallDomainController')]"
+            "InstallDomainController"
           ],
           "properties": {
             "publisher": "Microsoft.Compute",
