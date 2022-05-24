@@ -284,8 +284,6 @@
 			],
 			"properties": {
 				"protectedParameters": "",
-				"runAsUser": "[variables('domainUserName')]",
-				"runAsPassword": "[parameters('adminPassword')]",
 				"source": {
 					"script": "[concat('$pass=(ConvertTo-SecureString -AsPlainText -Force \"', parameters('domainAccountPassword'), '\"); New-ADUser -Name \"', parameters('domainAccountUsername'), '\" -Accountpassword $pass -Enabled $true;', 'get-aduser -Filter \"Name -like \"\"', parameters('domainAccountUsername'), '\"\"\" | Enable-ADAccount')]"
 				},
