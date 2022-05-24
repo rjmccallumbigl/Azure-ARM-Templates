@@ -74,7 +74,7 @@
           "location": "[parameters('SharedVmConfig').location]",
           "dependsOn": [
             "[parameters('vmName')]",
-            "[concat(parameters('vmName'),'/InstallDomainController')]"
+            "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'),'/InstallDomainController')]"
           ],
           "properties": {
             "publisher": "Microsoft.Compute",
