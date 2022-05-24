@@ -72,8 +72,8 @@
           "apiVersion": "2021-04-01",
           "name": "CustomScriptExtension",
           "location": "[parameters('SharedVmConfig').location]",
-          "dependsOn": [            
-            "[resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('vmName'), 'InstallDomainController')]"
+          "dependsOn": [
+            "[concat(parameters('vmName'),'/InstallDomainController')]"
           ],
           "properties": {
             "publisher": "Microsoft.Compute",
