@@ -270,11 +270,11 @@
 			"properties": {
 				"environmentVariables":[
 					{
-						"name": "name",
+						"name": "UserName",
 						"value": "[parameters('domainAccountUsername')]"
 					},
 					{
-						"name": "pass",
+						"name": "Password",
 						"secureValue": "[parameters('domainAccountPassword')]"
 					}
 				],
