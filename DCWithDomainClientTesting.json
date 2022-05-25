@@ -258,31 +258,21 @@
 					}
 				}
 			}
-		},
+		},		
 		{
-			"type": "Microsoft.Resources/deploymentScripts",
-			"apiVersion": "2020-10-01",
+			"type": "Microsoft.Compute/virtualMachines/runCommands",
+			"apiVersion": "2021-11-01",
 			"kind": "AzurePowerShell",
-			"name": "runPowerShellInline",
+			"name": "[concat('DC1','/breakVMRunCommand')]",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
 				"[resourceId('Microsoft.Resources/deployments', 'ADDC')]"
 			],
 			"properties": {
-				"environmentVariables": [
-					{
-						"name": "UserName",
-						"value": "[parameters('domainAccountUsername')]"
-					},
-					{
-						"name": "Password",
-						"secureValue": "[parameters('domainAccountPassword')]"
-					}
-				],
-				"azPowerShellVersion": "6.4",
-				"scriptContent": "$pass=(ConvertTo-SecureString -AsPlainText -Force ${Env:Password}); $name=${Env:UserName}; New-ADUser -Name $name -Accountpassword $pass -Enabled $true; get-aduser -Filter \"Name -like '$name'\" | Enable-ADAccount;",
-				"cleanupPreference": "OnSuccess",
-				"retentionInterval": "P1D"
+				"source": {
+					"script": "[concat('New-ADUser -Name \"', parameters('domainAccountUsername'), '\" -Accountpassword (ConvertTo-SecureString -AsPlainText -Force \"', parameters('domainAccountPassword'), '\") -Enabled $true;', 'get-aduser -Filter \"Name -like \"\"', parameters('domainAccountUsername'), '\"\"\" | Enable-ADAccount')]"
+				},
+				"timeoutInSeconds": 60
 			}
 		}
 		// {
