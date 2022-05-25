@@ -1,5 +1,5 @@
 ﻿{
-  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
     "SharedVmConfig": {
@@ -21,7 +21,7 @@
   "variables": {},
   "resources": [
     {
-      "apiVersion": "2021-11-01",
+      "apiVersion": "2017-03-30",
       "type": "Microsoft.Compute/virtualMachines",
       "name": "[parameters('vmName')]",
       "location": "[parameters('SharedVmConfig').location]",
@@ -66,33 +66,12 @@
           }
         }
       },
-      "resources": [
-        {
-          "type": "extensions",
-          "apiVersion": "2021-04-01",
-          "name": "CustomScriptExtension",
-          "location": "[parameters('SharedVmConfig').location]",
-          "dependsOn": [
-            "[parameters('vmName')]",
-            "[resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('vmName'), 'InstallDomainController')]"
-          ],
-          "properties": {
-            "publisher": "Microsoft.Compute",
-            "type": "CustomScriptExtension",
-            "typeHandlerVersion": "1.8",
-            "autoUpgradeMinorVersion": true,
-            "settings": {
-              // "commandToExecute": "$pass=(ConvertTo-SecureString -AsPlainText -Force ${Env:Password}); $name=${Env:UserName}; New-ADUser -Name $name -Accountpassword $pass -Enabled $true; get-aduser -Filter \"Name -like '$name'\" | Enable-ADAccount;"
-              "commandToExecute": "[concat('powershell \"$pass=(ConvertTo-SecureString -AsPlainText -Force ''', parameters('SharedVmConfig').domainPassword, '''); $name=''',parameters('SharedVmConfig').createdDomainUserName,'''; New-ADUser -Name $name -Accountpassword $pass -Enabled $true; get-aduser -Filter \"\"\"Name -like ''$name'' \"\"\" | Enable-ADAccount; \"')]"
-            }
-          }
-        }
-      ]
+      "resources": []
     },
     {
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "name": "[concat(parameters('vmName'),'/InstallDomainController')]",
-      "apiVersion": "2021-11-01",
+      "apiVersion": "2017-03-30",
       "location": "[parameters('SharedVmConfig').location]",
       "dependsOn": [
         "[parameters('vmName')]"

@@ -35,7 +35,19 @@
 				"description": "The administrator account password."
 			}
 		},
-		"vmSize": {
+		"domainAccountUsername": {
+			"type": "string",
+			"metadata": {
+				"description": "The name of a domain user to create, i.e. globaluser."
+			}
+		},
+		"domainAccountPassword": {
+			"type": "securestring",
+			"metadata": {
+				"description": "The domain user account password."
+			}
+		},
+				"vmSize": {
 			"type": "string",
 			"metadata": {
 				"description": "Select a VM size for all VMs in your deployment."
@@ -89,8 +101,10 @@
 			"vmSize": "[parameters('vmSize')]",
 			"serverOS": "[parameters('serverOS')]",
 			"domainUsername": "[variables('domainUsername')]",
+			"createdDomainUserName": "[parameters('domainAccountUsername')]",
 			"adminUsername": "[parameters('adminUsername')]",
 			"adminPassword": "[parameters('adminPassword')]",
+			"domainPassword": "[parameters('domainAccountPassword')]",
 			"storageAccountNamePrefix": "[variables('storageAccountName')]",
 			"sasToken": "[parameters('_artifactsLocationSasToken')]",
 			"domainName": "[parameters('domainName')]"

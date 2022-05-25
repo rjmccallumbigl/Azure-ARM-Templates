@@ -78,7 +78,6 @@
 	},
 
 	"variables": {
-
 		"shortDomainName": "[first(split(parameters('domainName'),'.'))]",
 		"domainUserName": "[concat(variables('shortDomainName'),'\\',parameters('adminUsername'))]",
 		"assetLocation": "[concat(parameters('_artifactsLocation'),'/DSC')]",
@@ -259,7 +258,53 @@
 					}
 				}
 			}
+		},
+		{
+			"type": "Microsoft.Resources/deploymentScripts",
+			"apiVersion": "2020-10-01",
+			"kind": "AzurePowerShell",
+			"name": "runPowerShellInline",
+			"location": "[resourceGroup().location]",
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'ADDC')]"
+			],
+			"properties": {
+				"environmentVariables": [
+					{
+						"name": "UserName",
+						"value": "[parameters('domainAccountUsername')]"
+					},
+					{
+						"name": "Password",
+						"secureValue": "[parameters('domainAccountPassword')]"
+					}
+				],
+				"azPowerShellVersion": "6.4",
+				"scriptContent": "$pass=(ConvertTo-SecureString -AsPlainText -Force ${Env:Password}); $name=${Env:UserName}; New-ADUser -Name $name -Accountpassword $pass -Enabled $true; get-aduser -Filter \"Name -like '$name'\" | Enable-ADAccount;",
+				"cleanupPreference": "OnSuccess",
+				"retentionInterval": "P1D"
+			}
 		}
+		// {
+		// 	"type": "Microsoft.Compute/virtualMachines/extensions",
+		// 	"apiVersion": "2021-04-01",
+		// 	"name": "CustomScriptExtension",
+		// 	"location": "[parameters('SharedVmConfig').location]",
+		// 	"dependsOn": [
+		// 		"[parameters('vmName')]",
+		// 		"[resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('vmName'), 'InstallDomainController')]"
+		// 	],
+		// 	"properties": {
+		// 		"publisher": "Microsoft.Compute",
+		// 		"type": "CustomScriptExtension",
+		// 		"typeHandlerVersion": "1.8",
+		// 		"autoUpgradeMinorVersion": true,
+		// 		"settings": {
+		// 			// "commandToExecute": "$pass=(ConvertTo-SecureString -AsPlainText -Force ${Env:Password}); $name=${Env:UserName}; New-ADUser -Name $name -Accountpassword $pass -Enabled $true; get-aduser -Filter \"Name -like '$name'\" | Enable-ADAccount;"
+		// 			"commandToExecute": "[concat('powershell \"$pass=(ConvertTo-SecureString -AsPlainText -Force ''', parameters('SharedVmConfig').domainPassword, '''); $name=''',parameters('SharedVmConfig').createdDomainUserName,'''; New-ADUser -Name $name -Accountpassword $pass -Enabled $true; get-aduser -Filter \"\"\"Name -like ''$name'' \"\"\" | Enable-ADAccount; \"')]"
+		// 		}
+		// 	}
+		// }
 	],
 	"outputs": {
 		"DcPublicIpAddress": {

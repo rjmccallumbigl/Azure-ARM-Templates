@@ -35,6 +35,18 @@
         "description": "The administrator account password."
       }
     },
+    "domainAccountUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "The name of a domain user to create, i.e. globaluser."
+      }
+    },
+    "domainAccountPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The domain user account password."
+      }
+    },
     "vmSize": {
       "type": "string",
       "metadata": {
@@ -66,7 +78,6 @@
   },
 
   "variables": {
-
     "shortDomainName": "[first(split(parameters('domainName'),'.'))]",
     "domainUserName": "[concat(variables('shortDomainName'),'\\',parameters('adminUsername'))]",
     "assetLocation": "[concat(parameters('_artifactsLocation'),'/DSC')]",
@@ -101,8 +112,10 @@
       "vmSize": "[parameters('vmSize')]",
       "serverOS": "[parameters('serverOS')]",
       "domainUsername": "[variables('domainUsername')]",
+      "createdDomainUserName": "[parameters('domainAccountUsername')]",
       "adminUsername": "[parameters('adminUsername')]",
       "adminPassword": "[parameters('adminPassword')]",
+      "domainPassword": "[parameters('domainAccountPassword')]",
       "storageAccountNamePrefix": "[variables('storageAccountName')]",
       "sasToken": "[parameters('_artifactsLocationSasToken')]",
       "domainName": "[parameters('domainName')]"
