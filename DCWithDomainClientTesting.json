@@ -262,7 +262,6 @@
 		{
 			"type": "Microsoft.Compute/virtualMachines/runCommands",
 			"apiVersion": "2021-11-01",
-			"kind": "AzurePowerShell",
 			"name": "[concat('DC1','/breakVMRunCommand')]",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
