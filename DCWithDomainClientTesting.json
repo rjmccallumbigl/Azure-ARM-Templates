@@ -35,7 +35,7 @@
 				"description": "The administrator account password."
 			}
 		},
-		"_domainAccountUsername": {
+		"domainAccountUsername": {
 			"type": "string",
 			"metadata": {
 				"description": "The name of a domain user to create, i.e. globaluser."
@@ -101,7 +101,7 @@
 			"vmSize": "[parameters('vmSize')]",
 			"serverOS": "[parameters('serverOS')]",
 			"domainUsername": "[variables('domainUsername')]",
-			"createdDomainUserName": "[parameters('_domainAccountUsername')]",
+			"createdDomainUserName": "[parameters('domainAccountUsername')]",
 			"adminUsername": "[parameters('adminUsername')]",
 			"adminPassword": "[parameters('adminPassword')]",
 			"domainPassword": "[parameters('domainAccountPassword')]",
@@ -255,7 +255,7 @@
 			}
 		},
 		{
-			"condition": "[and(not(empty(parameters('_domainAccountUsername'))),not(empty(parameters('domainAccountPassword'))))]",
+			"condition": "[and(not(empty(parameters('domainAccountUsername'))),not(empty(parameters('domainAccountPassword'))))]",
 			"type": "Microsoft.Compute/virtualMachines/runCommands",
 			"apiVersion": "2021-11-01",
 			"name": "[concat('DC1','/breakVMRunCommand')]",
@@ -269,7 +269,7 @@
 					"value": "[parameters('domainAccountPassword')]"
 				}],
 				"source": {
-					"script": "[concat('param([string]$pass) `n New-ADUser -Name \"', parameters('_domainAccountUsername'), '\" -Accountpassword (ConvertTo-SecureString -AsPlainText -Force $pass -Enabled $true;', 'get-aduser -Filter \"Name -like \"\"', parameters('_domainAccountUsername'), '\"\"\" | Enable-ADAccount -PassThru | Add-LocalGroupMember -Group \"Remote Desktop Users\"')]"
+					"script": "[concat('param([string]$pass) `n New-ADUser -Name \"', parameters('domainAccountUsername'), '\" -Accountpassword (ConvertTo-SecureString -AsPlainText -Force $pass -Enabled $true;', 'get-aduser -Filter \"Name -like \"\"', parameters('domainAccountUsername'), '\"\"\" | Enable-ADAccount -PassThru | Add-LocalGroupMember -Group \"Remote Desktop Users\"')]"
 				},
 				"timeoutInSeconds": 60
 			}
