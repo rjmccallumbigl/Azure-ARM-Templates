@@ -278,13 +278,26 @@
 					}
 				],
 				"source": {
-					"script": "[concat('param([string]$pass) `n New-ADUser -Name \"', parameters('domainAccountUsername'), '\" -Accountpassword (ConvertTo-SecureString -AsPlainText -Force $pass -Enabled $true);', 'get-aduser -Filter \"Name -like \"\"', parameters('domainAccountUsername'), '\"\"\" | Enable-ADAccount -PassThru | Add-LocalGroupMember -Group \"Remote Desktop Users\"')]"
+					"script": "[concat('param([string]$pass); New-ADUser -Name \"', parameters('domainAccountUsername'), '\" -Accountpassword (ConvertTo-SecureString -AsPlainText -Force $pass) -Enabled $true;', 'get-aduser -Filter \"Name -like \"\"', parameters('domainAccountUsername'), '\"\"\" | Enable-ADAccount; cmd /c ''(net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''(net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add)')]"
+					// param([string]$pass="RyanHasaPassword!");New-ADUser -Name "bob3" -Accountpassword (ConvertTo-SecureString -AsPlainText -Force $pass) -Enabled $true;get-aduser -Filter "Name -like ""bob3""" | Enable-ADAccount; net localgroup "remote desktop users" "bob3" /add
 				},
 				"timeoutInSeconds": 60
 			}
 		}
 	],
 	"outputs": {
+		"adminUsername": {
+			"type": "string",
+			"value": "[parameters('adminUsername')]"
+		},
+		"domainUsername": {
+			"type": "string",
+			"value": "[concat(parameters('domainName'),'\\', parameters('domainAccountUsername'))]"
+		},
+		"generalDomainAccount": {
+			"type": "string",
+			"value": "[concat(parameters('domainName'),'\\User1')]"
+		},
 		"DcPublicIpAddress": {
 			"type": "string",
 			"value": "[reference(variables('VMs').adPublicIpName).ipAddress]"

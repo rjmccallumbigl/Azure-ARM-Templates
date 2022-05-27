@@ -271,6 +271,14 @@
 		}
 	],
 	"outputs": {
+		"Admin Username": {
+			"type": "string",
+			"value": "[parameters('adminUsername')]"
+		},
+		"Domain Username": {
+			"type": "string",
+			"value": "[concat(parameters('domainName'),'\\', parameters('domainAccountUsername'))]"
+		},
 		"DcPublicIpAddress": {
 			"type": "string",
 			"value": "[reference(variables('VMs').adPublicIpName).ipAddress]"
