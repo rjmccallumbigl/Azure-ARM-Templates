@@ -1,12 +1,13 @@
-/**
- *
- * https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2f%2fraw.githubusercontent.com%2frjmccallumbigl%2fAzure-ARM-Templates%2fmain%2fDCWithDomainClientTesting.json
- * 
- */
-
 {
 	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
+	"metadata": {
+		"author": "Ryan McCallum",
+		"alias": "RYMCCALL",
+		"GitHub": "",
+		"Enablement": "",
+		"deploymentLink": ""
+	},
 	"parameters": {
 		"configName": {
 			"type": "string",
@@ -264,7 +265,7 @@
 			"condition": "[and(not(empty(parameters('domainAccountUsername'))),not(empty(parameters('domainAccountPassword'))))]",
 			"type": "Microsoft.Compute/virtualMachines/runCommands",
 			"apiVersion": "2021-11-01",
-			"name": "[concat('DC1','/breakVMRunCommand')]",
+			"name": "[concat('DC1','/addDomainUserWithRunCommand')]",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
 				"[resourceId('Microsoft.Resources/deployments', 'ADDC')]"
@@ -277,7 +278,7 @@
 					}
 				],
 				"source": {
-					"script": "[concat('param([string]$pass) `n New-ADUser -Name \"', parameters('domainAccountUsername'), '\" -Accountpassword (ConvertTo-SecureString -AsPlainText -Force $pass -Enabled $true;', 'get-aduser -Filter \"Name -like \"\"', parameters('domainAccountUsername'), '\"\"\" | Enable-ADAccount -PassThru | Add-LocalGroupMember -Group \"Remote Desktop Users\"')]"
+					"script": "[concat('param([string]$pass) `n New-ADUser -Name \"', parameters('domainAccountUsername'), '\" -Accountpassword (ConvertTo-SecureString -AsPlainText -Force $pass -Enabled $true);', 'get-aduser -Filter \"Name -like \"\"', parameters('domainAccountUsername'), '\"\"\" | Enable-ADAccount -PassThru | Add-LocalGroupMember -Group \"Remote Desktop Users\"')]"
 				},
 				"timeoutInSeconds": 60
 			}
