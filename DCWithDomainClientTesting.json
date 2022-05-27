@@ -102,8 +102,16 @@
 				"CreateADPDC": "CreateADPDC.ps1\\CreateADPDC"
 			},
 			"adNicIP": "10.0.0.10",
-			"adPublicIpName": "[concat(parameters('configName'),'-AD_IP')]"
+			"adPublicIpName": "[concat(parameters('configName'),'-AD_IP')]",
+
+			"appVmName": "APP1",
+			"appConfigurationFunction": {
+				"AppConfig": "AppConfig.ps1\\AppConfig"
+			},
+			"appNicIP": "10.0.0.11",
+			"appPublicIpName": "[concat(parameters('configName'),'-APP_IP')]"
 		},
+
 		"SharedVmConfig": {
 			"location": "[resourceGroup().location]",
 			"vmSize": "[parameters('vmSize')]",
@@ -203,6 +211,19 @@
 			}
 		},
 		{
+			"apiVersion": "2017-06-01",
+			"type": "Microsoft.Network/publicIPAddresses",
+			"name": "[variables('VMs').appPublicIpName]",
+			"location": "[resourceGroup().location]",
+			"comments": "This is the public IP address for the app server VM.",
+			"properties": {
+				"publicIPAllocationMethod": "Static",
+				"dnsSettings": {
+					"domainNameLabel": "[toLower(concat(parameters('dnsLabelPrefix'),'app'))]"
+				}
+			}
+		},
+		{
 			"name": "[concat(parameters('configName'),'-AD_NIC')]",
 			"type": "Microsoft.Network/networkInterfaces",
 			"location": "[resourceGroup().location]",
@@ -227,6 +248,39 @@
 						}
 					}
 				]
+			}
+		},
+		{
+			"name": "[concat(parameters('configName'),'-APP_NIC')]",
+			"type": "Microsoft.Network/networkInterfaces",
+			"location": "[resourceGroup().location]",
+			"dependsOn": [
+				"[concat('Microsoft.Network/virtualNetworks/',parameters('configName'),'-vnet')]"
+			],
+			"apiVersion": "2018-01-01",
+			"comments": "This is the network interface for the app server VM.",
+			"properties": {
+				"ipConfigurations": [
+					{
+						"name": "ipconfig1",
+						"properties": {
+							"privateIPAllocationMethod": "Static",
+							"privateIPAddress": "[variables('VMs').appNicIP]",
+							"publicIPAddress": {
+								"id": "[resourceId ('Microsoft.Network/publicIPAddresses/',variables('VMs').appPublicIpName)]"
+							},
+							"subnet": {
+								"id": "[variables('network').subnetRef]"
+							}
+						}
+					}
+				],
+				"dnsSettings": {
+					"dnsServers": [
+						"[variables('VMs').adNicIP]"
+					],
+					"internalDomainNameSuffix": "[parameters('domainName')]"
+				}
 			}
 		},
 		{
@@ -263,6 +317,40 @@
 			}
 		},
 		{
+			"name": "AppServer",
+			"type": "Microsoft.Resources/deployments",
+			"apiVersion": "2015-01-01",
+			"comments": "This is the deployment resource for the app server VM.",
+			"dependsOn": [
+				"[concat('Microsoft.Network/networkInterfaces/',parameters('configName'),'-APP_NIC')]",
+				"[concat('Microsoft.Resources/deployments/','ADDC')]"
+			],
+			"properties": {
+				"mode": "Incremental",
+				"templateLink": {
+					"uri": "[concat(variables('templates'),'/app.json',parameters('_artifactsLocationSasToken'))]",
+					"contentVersion": "1.0.0.0"
+				},
+				"parameters": {
+					"SharedVmConfig": {
+						"value": "[variables('SharedVmConfig')]"
+					},
+					"vmName": {
+						"value": "[variables('VMs').appVmName]"
+					},
+					"nicName": {
+						"value": "[concat(parameters('configName'),'-APP_NIC')]"
+					},
+					"modulesURL": {
+						"value": "[variables('assetLocation')]"
+					},
+					"configurationFunction": {
+						"value": "[variables('VMs').appConfigurationFunction]"
+					}
+				}
+			}
+		},
+		{
 			"condition": "[and(not(empty(parameters('domainAccountUsername'))),not(empty(parameters('domainAccountPassword'))))]",
 			"type": "Microsoft.Compute/virtualMachines/runCommands",
 			"apiVersion": "2021-11-01",
@@ -279,7 +367,8 @@
 					}
 				],
 				"source": {
-					"script": "[concat('param([string]$pass); New-ADUser -Name \"', parameters('domainAccountUsername'), '\" -Accountpassword (ConvertTo-SecureString -AsPlainText -Force $pass) -Enabled $true;', 'get-aduser -Filter \"Name -like \"\"', parameters('domainAccountUsername'), '\"\"\" | Enable-ADAccount; cmd /c ''(net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''(net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add)''')]"
+					"script": "[concat('param([string]$pass); cmd /c \"(netdom remove ', variables('VMs').appVmName, ' /domain:', parameters('domainName'), ' /userD:', parameters('domainAccountUsername'), ' /passwordD:$($pass) /reboot:10 /Force)\"')]"
+					// cmd /c "netdom remove <<MachineName>> /domain:<<DomainName>> /userD:<<DomainAdminhere>> /passwordD:<<PasswordHere>> /reboot:10 /Force"
 				},
 				"timeoutInSeconds": 60
 			}
@@ -305,6 +394,14 @@
 		"DcFqdn": {
 			"type": "string",
 			"value": "[reference(variables('VMs').adPublicIpName).dnsSettings.fqdn]"
+		},
+		"AppPublicIpAddress": {
+			"type": "string",
+			"value": "[reference(variables('VMs').appPublicIpName).ipAddress]"
+		},
+		"AppFqdn": {
+			"type": "string",
+			"value": "[reference(variables('VMs').appPublicIpName).dnsSettings.fqdn]"
 		}
 	}
 }
