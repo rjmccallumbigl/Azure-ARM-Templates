@@ -2,9 +2,10 @@
 	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"metadata": {
+		"description": "Testing new scenarios",
 		"author": "Ryan McCallum",
 		"alias": "RYMCCALL",
-		"GitHub": "",
+		"GitHub": "https://github.com/rjmccallumbigl/Azure-ARM-Templates",
 		"Enablement": "",
 		"deploymentLink": ""
 	},
@@ -279,7 +280,6 @@
 				],
 				"source": {
 					"script": "[concat('param([string]$pass); New-ADUser -Name \"', parameters('domainAccountUsername'), '\" -Accountpassword (ConvertTo-SecureString -AsPlainText -Force $pass) -Enabled $true;', 'get-aduser -Filter \"Name -like \"\"', parameters('domainAccountUsername'), '\"\"\" | Enable-ADAccount; cmd /c ''(net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''(net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add)''')]"
-					// param([string]$pass="RyanHasaPassword!");New-ADUser -Name "bob3" -Accountpassword (ConvertTo-SecureString -AsPlainText -Force $pass) -Enabled $true;get-aduser -Filter "Name -like ""bob3""" | Enable-ADAccount; net localgroup "remote desktop users" "bob3" /add
 				},
 				"timeoutInSeconds": 60
 			}

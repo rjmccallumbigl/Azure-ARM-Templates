@@ -1,6 +1,14 @@
 {
 	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
+	"metadata": {
+		"description": "You have a domain user account not authorized to RDP.",
+		"author": "Ryan McCallum",
+		"alias": "RYMCCALL",
+		"GitHub": "https://github.com/rjmccallumbigl/Azure-ARM-Templates",
+		"Enablement": "https://docs.microsoft.com/en-us/troubleshoot/windows-server/remote/troubleshoot-remote-desktop-disconnected-errors#add-users-and-groups-to-the-remote-desktop-users-group-by-using-the-remote-tab",
+		"deploymentLink": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2f%2fraw.githubusercontent.com%2frjmccallumbigl%2fAzure-ARM-Templates%2fmain%2fDomainAcctNotAuthorized.json"
+	},
 	"parameters": {
 		"configName": {
 			"type": "string",
@@ -271,13 +279,17 @@
 		}
 	],
 	"outputs": {
-		"Admin Username": {
+		"adminUsername": {
 			"type": "string",
 			"value": "[parameters('adminUsername')]"
 		},
-		"Domain Username": {
+		"domainUsername": {
 			"type": "string",
 			"value": "[concat(parameters('domainName'),'\\', parameters('domainAccountUsername'))]"
+		},
+		"generalDomainAccount": {
+			"type": "string",
+			"value": "[concat(parameters('domainName'),'\\User1')]"
 		},
 		"DcPublicIpAddress": {
 			"type": "string",
