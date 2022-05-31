@@ -389,7 +389,7 @@
 					}
 				],
 				"source": {
-					"script": "[concat('param([string]$pass); cmd /c ''(net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''(net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c \"(netdom remove ', variables('VMs').appVmName, ' /domain:', parameters('domainName'), ' /userD:', parameters('domainAccountUsername'), ' /passwordD:$($pass) /reboot:10 /Force)\"')]"
+					"script": "[concat('param([string]$pass); cmd /c ''(net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''(net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c \"(netdom remove ', variables('VMs').appVmName, ' /domain:', parameters('domainName'), ' /userD:', parameters('domainAccountUsername'), ' /passwordD:$($pass) /reboot:10 /Force)\";')]"
 				},
 				"timeoutInSeconds": 60
 			}
