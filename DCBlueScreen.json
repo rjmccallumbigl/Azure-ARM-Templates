@@ -283,28 +283,6 @@
 				},
 				"timeoutInSeconds": 240
 			}
-		},
-		{
-			"condition": "[and(not(empty(parameters('domainAccountUsername'))),not(empty(parameters('domainAccountPassword'))))]",
-			"type": "Microsoft.Compute/virtualMachines/runCommands",
-			"apiVersion": "2021-11-01",
-			"name": "[concat('APP1','/addDomainUserToApp1WithRunCommand')]",
-			"location": "[resourceGroup().location]",
-			"dependsOn": [
-				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]"
-			],
-			"properties": {
-				"protectedParameters": [
-					{
-						"name": "pass",
-						"value": "[parameters('domainAccountPassword')]"
-					}
-				],
-				"source": {
-					"script": "[concat('cmd /c ''(net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''(net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add)''')]"
-				},
-				"timeoutInSeconds": 60
-			}
 		}
 	],
 	"outputs": {
