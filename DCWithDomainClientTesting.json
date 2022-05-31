@@ -376,10 +376,9 @@
 			"condition": "[and(not(empty(parameters('domainAccountUsername'))),not(empty(parameters('domainAccountPassword'))))]",
 			"type": "Microsoft.Compute/virtualMachines/runCommands",
 			"apiVersion": "2021-11-01",
-			"name": "[concat('APP1','/RemoveFromDomain')]",
+			"name": "[concat('APP1','/addDomainUserToApp1WithRunCommand')]",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
-				// "[resourceId('Microsoft.Resources/deployments', 'ADDC')]"
 				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]"
 			],
 			"properties": {
@@ -390,7 +389,7 @@
 					}
 				],
 				"source": {
-					"script": "[concat('param([string]$pass); cmd /c \"(netdom remove ', variables('VMs').appVmName, ' /domain:', parameters('domainName'), ' /userD:', parameters('domainAccountUsername'), ' /passwordD:$($pass) /reboot:10 /Force)\"')]"
+					"script": "[concat('param([string]$pass); cmd /c ''(net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''(net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c \"(netdom remove ', variables('VMs').appVmName, ' /domain:', parameters('domainName'), ' /userD:', parameters('domainAccountUsername'), ' /passwordD:$($pass) /reboot:10 /Force)\"')]"
 				},
 				"timeoutInSeconds": 60
 			}
