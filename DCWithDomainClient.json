@@ -393,7 +393,7 @@
           }
         ],
         "source": {
-          "script": "[concat('cmd /c ''(net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''(net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add)''')]"
+          "script": "[concat('cmd /c ''(net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''(net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add)''; Restart-Computer -Force;')]"
         },
         "timeoutInSeconds": 60
       }
