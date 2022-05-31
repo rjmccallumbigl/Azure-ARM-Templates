@@ -380,10 +380,10 @@
       "condition": "[and(not(empty(parameters('domainAccountUsername'))),not(empty(parameters('domainAccountPassword'))))]",
       "type": "Microsoft.Compute/virtualMachines/runCommands",
       "apiVersion": "2021-11-01",
-      "name": "[concat('APP1','/addDomainUserWithRunCommand')]",
+      "name": "[concat('APP1','/addDomainUserToApp1WithRunCommand')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', 'ADDC')]"        
+        "[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]"       
       ],
       "properties": {
         "protectedParameters": [
