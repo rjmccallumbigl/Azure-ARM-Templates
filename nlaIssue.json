@@ -387,7 +387,7 @@
 					}
 				],
 				"source": {
-					"script": "[concat('Get-ADComputer -Filter \"Name -like \"\"', variables('VMs').appVmName, '\"\"\" | Remove-ADObject -Confirm:$false -Recursive;')]"
+					"script": "[concat('param([string]$pass); $Credential = New-Object System.Management.Automation.PSCredential(\"', parameters('domainName'), '\\', parameters('domainAccountUsername'), '\", (ConvertTo-SecureString -String $pass -AsPlainText -Force)); Get-ADComputer -Filter \"Name -like \"\"', variables('VMs').appVmName, '\"\"\" | Remove-ADObject -Confirm:$false -Recursive -Credential $Credential;')]"
 				},
 				"timeoutInSeconds": 60
 			}
