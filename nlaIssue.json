@@ -370,50 +370,51 @@
 				"timeoutInSeconds": 60
 			}
 		},
-		{
-			"type": "Microsoft.Compute/virtualMachines/extensions",
-			"apiVersion": "2020-12-01",
-			"name": "CustomScriptExtension",
-			"location": "[resourceGroup().location]",
-			"dependsOn": [
-				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]",
-				"[variables('VMs').appVmName]"
-			],
-			"properties": {
-				"publisher": "Microsoft.Compute",
-				"type": "CustomScriptExtension",
-				"typeHandlerVersion": "1.8",
-				"autoUpgradeMinorVersion": true,
-				"protectedSettings": {
-					"commandToExecute": "[concat('powershell \"Start-Process powershell -Verb runAs -ArgumentList { param([string]$pass=''', parameters('adminPassword'), '''); $Credential = New-Object System.Management.Automation.PSCredential(''', parameters('domainName'), '\\', parameters('domainAccountUsername'), ''', (ConvertTo-SecureString -String $pass -AsPlainText -Force)); Get-ADComputer -Filter ''Name -like ''''', variables('VMs').appVmName, ''''''' | Remove-ADObject -Confirm:$false -Recursive -Credential $Credential; }\"')]"
-				}
-				// "settings": {
-					// "commandToExecute": "powershell.exe bcdedit /set safeboot minimal; powershell.exe Restart-Computer -Force"
-				// }
-			}
-		},
 		// {
-		// 	"condition": "[and(not(empty(parameters('domainAccountUsername'))),not(empty(parameters('domainAccountPassword'))))]",
-		// 	"type": "Microsoft.Compute/virtualMachines/runCommands",
-		// 	"apiVersion": "2021-11-01",
-		// 	"name": "[concat('DC1','/nlaIssue')]",
+		// 	"type": "Microsoft.Compute/virtualMachines/extensions",
+		// 	"apiVersion": "2020-12-01",
+		// 	"name": "CustomScriptExtension",
 		// 	"location": "[resourceGroup().location]",
 		// 	"dependsOn": [
-		// 		"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]"
+		// 		"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]",
+		// 		"[variables('VMs').appVmName]"
 		// 	],
 		// 	"properties": {
-		// 		"protectedParameters": [
-		// 			{
-		// 				"name": "pass",
-		// 				"value": "[parameters('domainAccountPassword')]"
-		// 			}
-		// 		],
-		// 		"source": {
-		// 			"script": "[concat('param([string]$pass); $Credential = New-Object System.Management.Automation.PSCredential(\"', parameters('domainName'), '\\', parameters('domainAccountUsername'), '\", (ConvertTo-SecureString -String $pass -AsPlainText -Force)); Get-ADComputer -Filter \"Name -like \"\"', variables('VMs').appVmName, '\"\"\" | Remove-ADObject -Confirm:$false -Recursive -Credential $Credential;')]"
-		// 		},
-		// 		"timeoutInSeconds": 60
+		// 		"publisher": "Microsoft.Compute",
+		// 		"type": "CustomScriptExtension",
+		// 		"typeHandlerVersion": "1.8",
+		// 		"autoUpgradeMinorVersion": true,
+		// 		"protectedSettings": {
+		// 			"commandToExecute": "[concat('powershell \"Start-Process powershell -Verb runAs -ArgumentList { param([string]$pass=''', parameters('adminPassword'), '''); $Credential = New-Object System.Management.Automation.PSCredential(''', parameters('domainName'), '\\', parameters('domainAccountUsername'), ''', (ConvertTo-SecureString -String $pass -AsPlainText -Force)); Get-ADComputer -Filter ''Name -like ''''', variables('VMs').appVmName, ''''''' | Remove-ADObject -Confirm:$false -Recursive -Credential $Credential; }\"')]"
+		// 		}
+		// 		// "settings": {
+		// 			// "commandToExecute": "powershell.exe bcdedit /set safeboot minimal; powershell.exe Restart-Computer -Force"
+		// 		// }
 		// 	}
 		// },
+		{
+			"condition": "[and(not(empty(parameters('domainAccountUsername'))),not(empty(parameters('domainAccountPassword'))))]",
+			"type": "Microsoft.Compute/virtualMachines/runCommands",
+			"apiVersion": "2021-11-01",
+			"name": "[concat('DC1','/nlaIssue')]",
+			"location": "[resourceGroup().location]",
+			"dependsOn": [
+				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]"
+			],
+			"properties": {
+				"protectedParameters": [
+					{
+						"name": "pass",
+						"value": "[parameters('domainAccountPassword')]"
+					}
+				],
+				"source": {
+					"script": "[concat('\"Start-Process powershell -Verb runAs -ArgumentList { param([string]$pass); $Credential = New-Object System.Management.Automation.PSCredential(\"', parameters('domainName'), '\\', parameters('domainAccountUsername'), '\", (ConvertTo-SecureString -String $pass -AsPlainText -Force)); Get-ADComputer -Filter \"Name -like \"\"', variables('VMs').appVmName, '\"\"\" | Remove-ADObject -Confirm:$false -Recursive -Credential $Credential; }\"')]"
+					// 			"commandToExecute": "[concat('powershell \"Start-Process powershell -Verb runAs -ArgumentList { param([string]$pass=''', parameters('adminPassword'), '''); $Credential = New-Object System.Management.Automation.PSCredential(''', parameters('domainName'), '\\', parameters('domainAccountUsername'), ''', (ConvertTo-SecureString -String $pass -AsPlainText -Force)); Get-ADComputer -Filter ''Name -like ''''', variables('VMs').appVmName, ''''''' | Remove-ADObject -Confirm:$false -Recursive -Credential $Credential; }\"')]"
+				},
+				"timeoutInSeconds": 60
+			}
+		},
 		{
 			"condition": "[and(not(empty(parameters('domainAccountUsername'))),not(empty(parameters('domainAccountPassword'))))]",
 			"type": "Microsoft.Compute/virtualMachines/runCommands",
