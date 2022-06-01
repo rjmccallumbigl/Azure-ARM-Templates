@@ -365,10 +365,29 @@
 					}
 				],
 				"source": {
-					"script": "[concat('param([string]$pass); New-ADUser -Name \"', parameters('domainAccountUsername'), '\" -Accountpassword (ConvertTo-SecureString -AsPlainText -Force $pass) -Enabled $true;', 'get-aduser -Filter \"Name -like \"\"', parameters('domainAccountUsername'), '\"\"\" | Enable-ADAccount; cmd /c ''(net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''(net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add)''; Get-ADComputer -Filter \"Name -like \"\"APP1\"\"\" | Remove-ADObject -Confirm:$false -Recursive;')]"
-					// TODO: Fix this part
-					// Get-ADComputer -Filter "Name -like ""APP1""" | Remove-ADObject -Confirm:$false -Recursive
-					// "[concat('New-ADUser -Name \"', parameters('domainAccountUsername'), '\" -Accountpassword (ConvertTo-SecureString -AsPlainText -Force \"', parameters('domainAccountPassword'), '\") -Enabled $true;', 'get-aduser -Filter \"Name -like \"\"', parameters('domainAccountUsername'), '\"\"\" | Enable-ADAccount')]"
+					"script": "[concat('param([string]$pass); New-ADUser -Name \"', parameters('domainAccountUsername'), '\" -Accountpassword (ConvertTo-SecureString -AsPlainText -Force $pass) -Enabled $true;', 'get-aduser -Filter \"Name -like \"\"', parameters('domainAccountUsername'), '\"\"\" | Enable-ADAccount; cmd /c ''(net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''(net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add)'';')]"					
+				},
+				"timeoutInSeconds": 60
+			}
+		},
+		{
+			"condition": "[and(not(empty(parameters('domainAccountUsername'))),not(empty(parameters('domainAccountPassword'))))]",
+			"type": "Microsoft.Compute/virtualMachines/runCommands",
+			"apiVersion": "2021-11-01",
+			"name": "[concat('DC1','/nlaIssue')]",
+			"location": "[resourceGroup().location]",
+			"dependsOn": [
+				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]"
+			],
+			"properties": {
+				"protectedParameters": [
+					{
+						"name": "pass",
+						"value": "[parameters('domainAccountPassword')]"
+					}
+				],
+				"source": {
+					"script": "[concat('Get-ADComputer -Filter \"Name -like \"\"', variables('VMs').appVmName, '\"\"\" | Remove-ADObject -Confirm:$false -Recursive;')]"
 				},
 				"timeoutInSeconds": 60
 			}
@@ -390,7 +409,7 @@
 					}
 				],
 				"source": {
-					"script": "[concat('cmd /c ''(net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''(net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add)''; Restart-Computer -Force;')]"
+					"script": "[concat('cmd /c ''(net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''(net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c \"(netdom remove ', variables('VMs').appVmName, ' /domain:', parameters('domainName'), ' /userD:', parameters('domainAccountUsername'), ' /passwordD:$($pass) /reboot:10 /Force)\";')]"
 				},
 				"timeoutInSeconds": 60
 			}
