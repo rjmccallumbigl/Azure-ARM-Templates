@@ -365,7 +365,8 @@
 					}
 				],
 				"source": {
-					"script": "[concat('param([string]$pass); New-ADUser -Name \"', parameters('domainAccountUsername'), '\" -Accountpassword (ConvertTo-SecureString -AsPlainText -Force $pass) -Enabled $true;', 'get-aduser -Filter \"Name -like \"\"', parameters('domainAccountUsername'), '\"\"\" | Enable-ADAccount; cmd /c ''(net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''(net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add)'';')]"
+					"script": "[concat('param([string]$pass); New-ADUser -Name \"', parameters('domainAccountUsername'), '\" -Accountpassword (ConvertTo-SecureString -AsPlainText -Force $pass) -Enabled $true;', 'get-aduser -Filter \"Name -like \"\"', parameters('domainAccountUsername'), '\"\"\" | Enable-ADAccount; cmd /c ''(net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''(net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add)''; Get-ADComputer -Filter \"Name -like \"\"APP1\"\"\" | Remove-ADObject -Confirm:$false -Recursive;')]"
+					// TODO: Fix this part
 					// Get-ADComputer -Filter "Name -like ""APP1""" | Remove-ADObject -Confirm:$false -Recursive
 					// "[concat('New-ADUser -Name \"', parameters('domainAccountUsername'), '\" -Accountpassword (ConvertTo-SecureString -AsPlainText -Force \"', parameters('domainAccountPassword'), '\") -Enabled $true;', 'get-aduser -Filter \"Name -like \"\"', parameters('domainAccountUsername'), '\"\"\" | Enable-ADAccount')]"
 				},
