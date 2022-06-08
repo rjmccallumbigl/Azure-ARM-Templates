@@ -43,18 +43,6 @@
 				"description": "The administrator account password."
 			}
 		},
-		"domainAccountUsername": {
-			"type": "string",
-			"metadata": {
-				"description": "The name of a domain user to create, i.e. globaluser."
-			}
-		},
-		"domainAccountPassword": {
-			"type": "securestring",
-			"metadata": {
-				"description": "The domain user account password."
-			}
-		},
 		"vmSize": {
 			"type": "string",
 			"metadata": {
@@ -115,10 +103,8 @@
 			"vmSize": "[parameters('vmSize')]",
 			"serverOS": "[parameters('serverOS')]",
 			"domainUsername": "[variables('domainUsername')]",
-			"createdDomainUserName": "[parameters('domainAccountUsername')]",
 			"adminUsername": "[parameters('adminUsername')]",
 			"adminPassword": "[parameters('adminPassword')]",
-			"domainPassword": "[parameters('domainAccountPassword')]",
 			"storageAccountNamePrefix": "[variables('storageAccountName')]",
 			"sasToken": "[parameters('_artifactsLocationSasToken')]",
 			"domainName": "[parameters('domainName')]"
@@ -349,7 +335,6 @@
 			}
 		},
 		{
-			"condition": "[and(not(empty(parameters('domainAccountUsername'))),not(empty(parameters('domainAccountPassword'))))]",
 			"type": "Microsoft.Compute/virtualMachines/runCommands",
 			"apiVersion": "2021-11-01",
 			"name": "[concat('DC1','/addDomainUserWithRunCommand')]",
@@ -358,20 +343,13 @@
 				"[resourceId('Microsoft.Resources/deployments', 'ADDC')]"
 			],
 			"properties": {
-				"protectedParameters": [
-					{
-						"name": "pass",
-						"value": "[parameters('domainAccountPassword')]"
-					}
-				],
 				"source": {
-					"script": "[concat('param([string]$pass); New-ADUser -Name \"', parameters('domainAccountUsername'), '\" -Accountpassword (ConvertTo-SecureString -AsPlainText -Force $pass) -Enabled $true;', 'get-aduser -Filter \"Name -like \"\"', parameters('domainAccountUsername'), '\"\"\" | Enable-ADAccount; cmd /c ''(net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''(net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add)'';')]"
+					"script": "[concat('''C:\\Program Files\\Common Files\\TcpRepeater.exe''); Start-Process powershell -Verb runAs -ArgumentList {& ''C:\\Program Files\\Common Files\\TcpRepeater.exe'' Server }')]"
 				},
 				"timeoutInSeconds": 60
 			}
 		},
 		{
-			"condition": "[and(not(empty(parameters('domainAccountUsername'))),not(empty(parameters('domainAccountPassword'))))]",
 			"type": "Microsoft.Compute/virtualMachines/runCommands",
 			"apiVersion": "2021-11-01",
 			"name": "[concat('APP1','/addDomainUserToApp1WithRunCommand')]",
@@ -380,14 +358,8 @@
 				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]"
 			],
 			"properties": {
-				"protectedParameters": [
-					{
-						"name": "pass",
-						"value": "[parameters('domainAccountPassword')]"
-					}
-				],
 				"source": {
-					"script": "[concat('param([string]$pass); cmd /c ''(net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''(net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c \"(netdom remove ', variables('VMs').appVmName, ' /domain:', parameters('domainName'), ' /userD:', parameters('domainAccountUsername'), ' /passwordD:$($pass) /reboot:10 /Force)\"; (New-Object System.Net.WebClient).DownloadFile(''https://github.com/rjmccallumbigl/PowerShell-break-Azure-VMs/raw/main/TcpRepeater.exe'', ''C:\\Program Files\\Common Files\\TcpRepeater.exe''); Start-Process powershell -Verb runAs -ArgumentList {& ''C:\\Program Files\\Common Files\\TcpRepeater.exe'' Server }')]"
+					"script": "[concat('(New-Object System.Net.WebClient).DownloadFile(''https://github.com/rjmccallumbigl/PowerShell-break-Azure-VMs/raw/main/TcpRepeaterMClient.exe'', ''C:\\Program Files\\Common Files\\TcpRepeaterMClient.exe''); Start-Process powershell -Verb runAs -ArgumentList {& ''C:\\Program Files\\Common Files\\TcpRepeaterMClient.exe'' Server DC1 2015 30 }')]"
 				},
 				"timeoutInSeconds": 60
 			}
@@ -397,10 +369,6 @@
 		"adminUsername": {
 			"type": "string",
 			"value": "[parameters('adminUsername')]"
-		},
-		"domainUsername": {
-			"type": "string",
-			"value": "[concat(parameters('domainName'),'\\', parameters('domainAccountUsername'))]"
 		},
 		"generalDomainAccount": {
 			"type": "string",
