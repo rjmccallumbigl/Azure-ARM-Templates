@@ -6,8 +6,8 @@
 		"author": "Ryan McCallum",
 		"alias": "RYMCCALL",
 		"GitHub": "https://github.com/rjmccallumbigl/Azure-ARM-Templates",
-		"Enablement": "https://docs.microsoft.com/en-us/azure/load-balancer/troubleshoot-outbound-connection",
-		"deploymentLink": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2f%2fraw.githubusercontent.com%2frjmccallumbigl%2fAzure-ARM-Templates%2fmain%2fSNATExhaustion.json"
+		"Enablement": "https://docs.microsoft.com/en-us/windows/client-management/troubleshoot-tcpip-port-exhaust",
+		"deploymentLink": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2f%2fraw.githubusercontent.com%2frjmccallumbigl%2fAzure-ARM-Templates%2fmain%2fportExhaustion.json"
 	},
 	"parameters": {
 		"configName": {
@@ -337,14 +337,14 @@
 		{
 			"type": "Microsoft.Compute/virtualMachines/runCommands",
 			"apiVersion": "2021-11-01",
-			"name": "[concat('DC1','/addDomainUserWithRunCommand')]",
+			"name": "[concat('DC1','/portExhaustServer')]",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
 				"[resourceId('Microsoft.Resources/deployments', 'ADDC')]"
 			],
 			"properties": {
 				"source": {
-					"script": "[concat('''C:\\Program Files\\Common Files\\TcpRepeater.exe''); Start-Process powershell -Verb runAs -ArgumentList {& ''C:\\Program Files\\Common Files\\TcpRepeater.exe'' Server }')]"
+					"script": "[concat('[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::TLS12;(New-Object System.Net.WebClient).DownloadFile(''https://github.com/rjmccallumbigl/PowerShell-break-Azure-VMs/raw/main/TcpRepeater.exe'', ''C:\\Program Files\\Common Files\\TcpRepeater.exe''); Start-Process powershell -Verb runAs -ArgumentList {& ''C:\\Program Files\\Common Files\\TcpRepeater.exe'' Server }')]"
 				},
 				"timeoutInSeconds": 60
 			}
@@ -352,14 +352,14 @@
 		{
 			"type": "Microsoft.Compute/virtualMachines/runCommands",
 			"apiVersion": "2021-11-01",
-			"name": "[concat('APP1','/addDomainUserToApp1WithRunCommand')]",
+			"name": "[concat('APP1','/portExhaust')]",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
-				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]"
+				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'portExhaustServer')]"
 			],
 			"properties": {
 				"source": {
-					"script": "[concat('(New-Object System.Net.WebClient).DownloadFile(''https://github.com/rjmccallumbigl/PowerShell-break-Azure-VMs/raw/main/TcpRepeaterMClient.exe'', ''C:\\Program Files\\Common Files\\TcpRepeaterMClient.exe''); Start-Process powershell -Verb runAs -ArgumentList {& ''C:\\Program Files\\Common Files\\TcpRepeaterMClient.exe'' Server DC1 2015 30 }')]"
+					"script": "[concat('[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::TLS12;(New-Object System.Net.WebClient).DownloadFile(''https://github.com/rjmccallumbigl/PowerShell-break-Azure-VMs/raw/main/TcpRepeaterMClient.exe'', ''C:\\Program Files\\Common Files\\TcpRepeaterMClient.exe''); netsh int ipv4 set dynamicport tcp start=1025 num=1030; netsh int ipv4 set dynamicport udp start=1025 num=1030; netsh int ipv6 set dynamicport tcp start=1025 num=1030; netsh int ipv6 set dynamicport ucp start=1025 num=1030; Start-Process powershell -Verb runAs -ArgumentList {& ''C:\\Program Files\\Common Files\\TcpRepeaterMClient.exe'' DC1 999999999 }')]"
 				},
 				"timeoutInSeconds": 60
 			}
