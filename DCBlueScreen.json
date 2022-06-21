@@ -43,18 +43,6 @@
 				"description": "The administrator account password."
 			}
 		},
-		"domainAccountUsername": {
-			"type": "string",
-			"metadata": {
-				"description": "The name of a domain user to create, i.e. globaluser."
-			}
-		},
-		"domainAccountPassword": {
-			"type": "securestring",
-			"metadata": {
-				"description": "The domain user account password."
-			}
-		},
 		"vmSize": {
 			"type": "string",
 			"metadata": {
@@ -102,17 +90,15 @@
 				"CreateADPDC": "CreateADPDC.ps1\\CreateADPDC"
 			},
 			"adNicIP": "10.0.0.10",
-			"adPublicIpName": "[concat(parameters('configName'),'-AD_IP')]"			
+			"adPublicIpName": "[concat(parameters('configName'),'-AD_IP')]"
 		},
 		"SharedVmConfig": {
 			"location": "[resourceGroup().location]",
 			"vmSize": "[parameters('vmSize')]",
 			"serverOS": "[parameters('serverOS')]",
 			"domainUsername": "[variables('domainUsername')]",
-			"createdDomainUserName": "[parameters('domainAccountUsername')]",
 			"adminUsername": "[parameters('adminUsername')]",
 			"adminPassword": "[parameters('adminPassword')]",
-			"domainPassword": "[parameters('domainAccountPassword')]",
 			"storageAccountNamePrefix": "[variables('storageAccountName')]",
 			"sasToken": "[parameters('_artifactsLocationSasToken')]",
 			"domainName": "[parameters('domainName')]"
@@ -201,7 +187,7 @@
 					"domainNameLabel": "[toLower(concat(parameters('dnsLabelPrefix'),'ad'))]"
 				}
 			}
-		},		
+		},
 		{
 			"name": "[concat(parameters('configName'),'-AD_NIC')]",
 			"type": "Microsoft.Network/networkInterfaces",
@@ -263,23 +249,16 @@
 			}
 		},
 		{
-			"condition": "[and(not(empty(parameters('domainAccountUsername'))),not(empty(parameters('domainAccountPassword'))))]",
 			"type": "Microsoft.Compute/virtualMachines/runCommands",
 			"apiVersion": "2021-11-01",
-			"name": "[concat('DC1','/addDomainUserWithRunCommand')]",
+			"name": "[concat('DC1','/breakDC')]",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
 				"[resourceId('Microsoft.Resources/deployments', 'ADDC')]"
 			],
 			"properties": {
-				"protectedParameters": [
-					{
-						"name": "pass",
-						"value": "[parameters('domainAccountPassword')]"
-					}
-				],
 				"source": {
-					"script": "[concat('param([string]$pass); New-ADUser -Name \"', parameters('domainAccountUsername'), '\" -Accountpassword (ConvertTo-SecureString -AsPlainText -Force $pass) -Enabled $true;', 'get-aduser -Filter \"Name -like \"\"', parameters('domainAccountUsername'), '\"\"\" | Enable-ADAccount; cmd /c ''(net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''(net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add)''; Get-Partition -DriveLetter F | Set-Partition -NewDriveLetter Y; Restart-Computer -Force;')]"
+					"script": "[concat('Get-Partition -DriveLetter F | Set-Partition -NewDriveLetter Y; Restart-Computer -Force;')]"
 				},
 				"timeoutInSeconds": 240
 			}
@@ -289,10 +268,6 @@
 		"adminUsername": {
 			"type": "string",
 			"value": "[parameters('adminUsername')]"
-		},
-		"domainUsername": {
-			"type": "string",
-			"value": "[concat(parameters('domainName'),'\\', parameters('domainAccountUsername'))]"
 		},
 		"generalDomainAccount": {
 			"type": "string",
