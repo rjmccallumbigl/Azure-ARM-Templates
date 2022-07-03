@@ -340,7 +340,7 @@
 			"name": "[concat('DC1','/bruteForceAttack')]",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
-				"[resourceId('Microsoft.Resources/deployments', 'ADDC')]"
+				"[resourceId('Microsoft.Resources/deployments', 'AppServer')]"
 			],
 			"properties": {
 				"source": {
