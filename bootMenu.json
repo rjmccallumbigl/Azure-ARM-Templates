@@ -1,6 +1,14 @@
 {
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
+    "metadata": {
+        "description": "You are prevented from directly launching the Windows OS due to the boot menu appearing on startup.",
+        "author": "Ryan McCallum",
+        "alias": "RYMCCALL",
+        "GitHub": "https://github.com/rjmccallumbigl/Azure-ARM-Templates",
+        "Enablement": "https://docs.microsoft.com/en-us/troubleshoot/azure/virtual-machines/troubleshoot-guide-windows-boot-manager-menu",
+        "deploymentLink": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2f%2fraw.githubusercontent.com%2frjmccallumbigl%2fAzure-ARM-Templates%2fmain%2fbootMenu.json"
+    },
     "parameters": {
         "adminUsername": {
             "type": "String",
