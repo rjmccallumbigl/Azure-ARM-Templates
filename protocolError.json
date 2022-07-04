@@ -2,12 +2,12 @@
 	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"metadata": {
-		"description": "The app server is experiencing a brute force attack.",
+		"description": "The app server is experiencing a protocol error when attempting RDP.",
 		"author": "Ryan McCallum",
 		"alias": "RYMCCALL",
 		"GitHub": "https://github.com/rjmccallumbigl/Azure-ARM-Templates",
 		"Enablement": "https://docs.microsoft.com/en-us/troubleshoot/azure/virtual-machines/cannot-rdp-azure-vm-brute-force",
-		"deploymentLink": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2f%2fraw.githubusercontent.com%2frjmccallumbigl%2fAzure-ARM-Templates%2fmain%2fbruteForce.json"
+		"deploymentLink": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2f%2fraw.githubusercontent.com%2frjmccallumbigl%2fAzure-ARM-Templates%2fmain%2fprotocolError.json"
 	},
 	"parameters": {
 		"configName": {
@@ -344,7 +344,7 @@
 			],
 			"properties": {
 				"source": {
-					"script": "[concat('Start-Process powershell -Verb runAs -ArgumentList { $targetIp=''', parameters('dnsLabelPrefix'), 'app.', resourceGroup().location, '.cloudapp.azure.com''; cmdkey /generic:TERMSRV/$targetIp /user:admin /pass:password; while (1) { mstsc /v:$targetIp; Start-Sleep -Seconds 1; } }')]"
+					"script": "[concat('Start-Process powershell -Verb runAs -ArgumentList { $targetIp=''', parameters('dnsLabelPrefix'), 'app.', resourceGroup().location, '.cloudapp.azure.com''; cmdkey /generic:TERMSRV/$targetIp /user:admin /pass:password; while (1) { mstsc /v:$targetIp } }')]"
 				},
 				"timeoutInSeconds": 60
 			}
