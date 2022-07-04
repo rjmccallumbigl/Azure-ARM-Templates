@@ -1,0 +1,274 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"adminUsername": {
+			"type": "String",
+			"metadata": {
+				"description": "Username for the Virtual Machine."
+			}
+		},
+		"adminPassword": {
+			"type": "SecureString",
+			"metadata": {
+				"description": "Password for the Virtual Machine."
+			}
+		},
+		"location": {
+			"defaultValue": "[resourceGroup().location]",
+			"type": "String",
+			"metadata": {
+				"description": "Location for all resources."
+			}
+		},
+		"vmSize": {
+			"defaultValue": "Standard_D2s_v3",
+			"type": "String",
+			"metadata": {
+				"description": "Default VM Size"
+			}
+		},
+		"dnsNameForPublicIP": {
+			"defaultValue": "[tolower(concat('dns', uniquestring(resourceGroup().id)))]",
+			"type": "String",
+			"metadata": {
+				"description": "DNS name for the public IP"
+			}
+		},
+		"storageUri": {
+			"defaultValue": "[format('store{0}', uniqueString(resourceGroup().id))]",
+			"type": "string",
+			"metadata": {
+				"description": "Name of storage account For Boot Diagnostics"
+			}
+		},
+		"storageAccountType": {
+			"type": "string",
+			"defaultValue": "Standard_LRS",
+			"metadata": {
+				"description": "Storage Account type"
+			}
+		},
+		"key-vault-name": {
+			"type": "string",
+			"metadata": {
+				"description": "Specifies the name of the key vault."
+			}
+		},
+		"utcValue": {
+			"type": "string",
+			"defaultValue": "[utcNow()]"
+		},
+		"disk-key-encryption-key-url": {
+			"reference": {
+				"keyVault": {
+					"id": "[resourceId('Microsoft.KeyVault/vaults', parameters('key-vault-name'))]"
+				},
+				"secretName": "disk-key-kek-kid"
+			}
+		}
+	},
+	"variables": {
+		"disk-encryption-type": "ADE",
+		"nicName": "myVMNic",
+		"addressPrefix": "10.0.0.0/16",
+		"subnetName": "Subnet",
+		"subnetPrefix": "10.0.0.0/24",
+		"subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]",
+		"vmName": "MyEncryptedVM",
+		"virtualNetworkName": "MyVNET",
+		"publicIPAddressName": "myPublicIP",
+		"networkSecurityGroupName": "default-NSG",
+		"windowsDiskEncryptionExtensionName": "AzureDiskEncryption",
+		"windowsDiskEncryptionExtensionVersion": "2.2",
+		"windowsEncryptionOperation": "EnableEncryption",
+		"windowsKeyEncryptionAlgorithm": "RSA-OAEP",
+		"disk-encryption-set-name": "deploy-script-disk-encryption-set",
+		"disk-encryption-set-id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/', 'Microsoft.Compute/diskEncryptionSets/', variables('disk-encryption-set-name'))]",
+		"managed-disk-json": {
+			"storageAccountType": "Premium_LRS",
+			"diskEncryptionSet": {
+				"id": "[variables('disk-encryption-set-id')]"
+			}
+		}
+	},
+	"resources": [
+		{
+			"type": "Microsoft.Network/publicIPAddresses",
+			"apiVersion": "2020-08-01",
+			"name": "[variables('publicIPAddressName')]",
+			"location": "[parameters('location')]",
+			"properties": {
+				"publicIPAllocationMethod": "Dynamic",
+				"dnsSettings": {
+					"domainNameLabel": "[parameters('dnsNameForPublicIP')]"
+				}
+			}
+		},
+		{
+			"type": "Microsoft.Network/networkSecurityGroups",
+			"apiVersion": "2020-08-01",
+			"name": "[variables('networkSecurityGroupName')]",
+			"location": "[parameters('location')]",
+			"properties": {
+				"securityRules": [
+					{
+						"name": "default-allow-3389",
+						"properties": {
+							"priority": 1000,
+							"access": "Allow",
+							"direction": "Inbound",
+							"destinationPortRange": "3389",
+							"protocol": "Tcp",
+							"sourceAddressPrefix": "*",
+							"sourcePortRange": "*",
+							"destinationAddressPrefix": "*"
+						}
+					}
+				]
+			}
+		},
+		{
+			"type": "Microsoft.Network/virtualNetworks",
+			"apiVersion": "2020-08-01",
+			"name": "[variables('virtualNetworkName')]",
+			"location": "[parameters('location')]",
+			"dependsOn": [
+				"[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+			],
+			"properties": {
+				"addressSpace": {
+					"addressPrefixes": [
+						"[variables('addressPrefix')]"
+					]
+				},
+				"subnets": [
+					{
+						"name": "[variables('subnetName')]",
+						"properties": {
+							"addressPrefix": "[variables('subnetPrefix')]",
+							"networkSecurityGroup": {
+								"id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"type": "Microsoft.Network/networkInterfaces",
+			"apiVersion": "2020-08-01",
+			"name": "[variables('nicName')]",
+			"location": "[parameters('location')]",
+			"dependsOn": [
+				"[variables('publicIPAddressName')]",
+				"[variables('virtualNetworkName')]"
+			],
+			"properties": {
+				"ipConfigurations": [
+					{
+						"name": "ipconfig1",
+						"properties": {
+							"privateIPAllocationMethod": "Dynamic",
+							"publicIPAddress": {
+								"id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+							},
+							"subnet": {
+								"id": "[variables('subnetRef')]"
+							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"type": "Microsoft.Storage/storageAccounts",
+			"apiVersion": "2021-06-01",
+			"name": "[parameters('storageUri')]",
+			"location": "[parameters('location')]",
+			"sku": {
+				"name": "[parameters('storageAccountType')]"
+			},
+			"kind": "StorageV2",
+			"properties": {}
+		},
+		{
+			"type": "Microsoft.Compute/virtualMachines",
+			"apiVersion": "2020-12-01",
+			"name": "[variables('vmName')]",
+			"location": "[parameters('location')]",
+			"dependsOn": [
+				"[variables('nicName')]"
+			],
+			"properties": {
+				"hardwareProfile": {
+					"vmSize": "[parameters('vmSize')]"
+				},
+				"osProfile": {
+					"computerName": "[variables('vmName')]",
+					"adminUsername": "[parameters('adminUsername')]",
+					"adminPassword": "[parameters('adminPassword')]"
+				},
+				"storageProfile": {
+					"imageReference": {
+						"publisher": "MicrosoftWindowsServer",
+						"offer": "WindowsServer",
+						"sku": "2019-Datacenter",
+						"version": "latest"
+					},
+					"osDisk": {
+						"createOption": "FromImage",
+						"managedDisk": "[if(equals(variables('disk-encryption-type'), 'ADE'), json('null'), variables('managed-disk-json'))]"
+
+					}
+				},
+				"networkProfile": {
+					"networkInterfaces": [
+						{
+							"id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
+						}
+					]
+				},
+				"diagnosticsProfile": {
+					"bootDiagnostics": {
+						"enabled": true,
+						"storageUri": "[concat('https://', parameters('storageUri'), '.blob.core.windows.net')]"
+					}
+				}
+			}
+		},
+		{
+			"type": "Microsoft.Compute/virtualMachines/extensions",
+			"name": "[concat('/', variables('vmName'), '/', variables('windowsDiskEncryptionExtensionName'))]",
+			"location": "[resourceGroup().location]",
+			"dependsOn": [
+				"[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+			],
+			"apiVersion": "2019-07-01",
+			"condition": "[bool(equals(variables('disk-encryption-type'), 'ADE'))]",
+			"properties": {
+				"publisher": "Microsoft.Azure.Security",
+				"type": "[variables('windowsDiskEncryptionExtensionName')]",
+				"typeHandlerVersion": "[variables('windowsDiskEncryptionExtensionVersion')]",
+				"autoUpgradeMinorVersion": true,
+				"forceUpdateTag": "[parameters('utcValue')]",
+				"settings": {
+					"EncryptionOperation": "[variables('windowsEncryptionOperation')]",
+					"KeyVaultURL": "[reference(resourceId('Microsoft.KeyVault/vaults', parameters('key-vault-name')), '2019-09-01').vaultUri]",
+					"KeyVaultResourceId": "[resourceId('Microsoft.KeyVault/vaults', parameters('key-vault-name'))]",
+					"KeyEncryptionKeyURL": "[variables('disk-key-encryption-key-url')]",
+					"KekVaultResourceId": "[resourceId('Microsoft.KeyVault/vaults', parameters('key-vault-name'))]",
+					"KeyEncryptionAlgorithm": "[variables('windowsKeyEncryptionAlgorithm')]",
+					"VolumeType": "All",
+					"ResizeOSDisk": false
+				}
+			}
+		}
+	],
+	"outputs": {
+		"vm-fqdn": {
+			"type": "String",
+			"value": "[reference(variables('publicIPAddressName'), '2020-07-01').dnsSettings.fqdn]"
+		}
+	}
+}
