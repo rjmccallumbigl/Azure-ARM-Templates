@@ -7,7 +7,7 @@
 		"alias": "RYMCCALL",
 		"GitHub": "https://github.com/rjmccallumbigl/Azure-ARM-Templates",
 		"Enablement": "https://docs.microsoft.com/en-us/troubleshoot/windows-server/identity/0xc00002e1-error-start-domain-controller",
-		"deploymentLink": "https://portal.azure.com/#create/Microsoft.Template/uri/https:%2f%2fraw.githubusercontent.com%2frjmccallumbigl%2fAzure-ARM-Templates%2fmain%2fDCBlueScreen.json"
+		"deploymentLink": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2f%2fraw.githubusercontent.com%2frjmccallumbigl%2fAzure-ARM-Templates%2fmain%2fDCBlueScreen.json"
 	},
 	"parameters": {
 		"configName": {
@@ -33,12 +33,14 @@
 		},
 		"adminUsername": {
 			"type": "string",
+			"maxLength": 20,
 			"metadata": {
 				"description": "The name of the domain administrator account to create, i.e. globaladmin. This will also be used to create a local admin account on each VMs."
 			}
 		},
 		"adminPassword": {
 			"type": "securestring",
+			"minLength": 12,
 			"metadata": {
 				"description": "The administrator account password."
 			}
