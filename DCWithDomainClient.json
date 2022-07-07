@@ -33,12 +33,14 @@
     },
     "adminUsername": {
       "type": "string",
+      "maxLength": 20,
       "metadata": {
         "description": "The name of the domain administrator account to create, i.e. globaladmin. This will also be used to create a local admin account on each VMs."
       }
     },
     "adminPassword": {
       "type": "securestring",
+      "minLength": 12,
       "metadata": {
         "description": "The administrator account password."
       }
@@ -383,7 +385,7 @@
       "name": "[concat('APP1','/addDomainUserToApp1WithRunCommand')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]"       
+        "[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]"
       ],
       "properties": {
         "protectedParameters": [

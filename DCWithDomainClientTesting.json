@@ -6,8 +6,8 @@
 		"author": "Ryan McCallum",
 		"alias": "RYMCCALL",
 		"GitHub": "https://github.com/rjmccallumbigl/Azure-ARM-Templates",
-		"Enablement": "",
-		"deploymentLink": ""
+		"Enablement": "https://docs.microsoft.com/en-us/windows-server/identity/ad-ds/get-started/virtual-dc/active-directory-domain-services-overview",
+		"deploymentLink": "https://portal.azure.com/#create/Microsoft.Template/uri/https:%2f%2fraw.githubusercontent.com%2frjmccallumbigl%2fAzure-ARM-Templates%2fmain%2fDCWithDomainClientTesting.json"
 	},
 	"parameters": {
 		"configName": {
@@ -33,12 +33,14 @@
 		},
 		"adminUsername": {
 			"type": "string",
+			"maxLength": 20,
 			"metadata": {
 				"description": "The name of the domain administrator account to create, i.e. globaladmin. This will also be used to create a local admin account on each VMs."
 			}
 		},
 		"adminPassword": {
 			"type": "securestring",
+			"minLength": 12,
 			"metadata": {
 				"description": "The administrator account password."
 			}
