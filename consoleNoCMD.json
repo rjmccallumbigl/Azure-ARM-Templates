@@ -1,6 +1,14 @@
 {
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
+    "metadata": {
+        "description": "Your Serial Console cannot create a CMD session.",
+        "author": "Ryan McCallum",
+        "alias": "RYMCCALL",
+        "GitHub": "https://github.com/rjmccallumbigl/Azure-ARM-Templates",
+        "Enablement": "https://docs.microsoft.com/en-us/troubleshoot/azure/virtual-machines/serial-console-errors",
+        "deploymentLink": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2f%2fraw.githubusercontent.com%2frjmccallumbigl%2fAzure-ARM-Templates%2fmain%2fconsoleNoCMD.json"
+    },
     "parameters": {
         "adminUsername": {
             "type": "String",
@@ -10,6 +18,7 @@
         },
         "adminPassword": {
             "type": "SecureString",
+            "minLength": 12,
             "metadata": {
                 "description": "Password for the Virtual Machine."
             }
