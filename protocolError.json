@@ -33,12 +33,14 @@
 		},
 		"adminUsername": {
 			"type": "string",
+			"maxLength": 20,
 			"metadata": {
 				"description": "The name of the domain administrator account to create, i.e. globaladmin. This will also be used to create a local admin account on each VMs."
 			}
 		},
 		"adminPassword": {
 			"type": "securestring",
+			"minLength": 12,
 			"metadata": {
 				"description": "The administrator account password."
 			}
@@ -48,7 +50,7 @@
 			"metadata": {
 				"description": "Select a VM size for all VMs in your deployment."
 			},
-			"defaultValue": "Standard_D2s_v3"
+			"defaultValue": "Standard_B2"
 		},
 		"dnsLabelPrefix": {
 			"defaultValue": "[tolower(concat('dns', uniquestring(resourceGroup().id)))]",
@@ -337,7 +339,7 @@
 		{
 			"type": "Microsoft.Compute/virtualMachines/runCommands",
 			"apiVersion": "2021-11-01",
-			"name": "[concat('DC1','/bruteForceAttack')]",
+			"name": "[concat('DC1','/protocolError')]",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
 				"[resourceId('Microsoft.Resources/deployments', 'AppServer')]"
