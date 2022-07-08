@@ -4,12 +4,14 @@
 	"parameters": {
 		"adminUsername": {
 			"type": "String",
+			"maxLength": 20,
 			"metadata": {
 				"description": "Username for the Virtual Machine."
 			}
 		},
 		"adminPassword": {
 			"type": "SecureString",
+			"minLength": 12,
 			"metadata": {
 				"description": "Password for the Virtual Machine."
 			}
@@ -38,7 +40,7 @@
 		"storageUri": {
 			"defaultValue": "[format('store{0}', uniqueString(resourceGroup().id))]",
 			"type": "string",
-			"metadata":{
+			"metadata": {
 				"description": "Name of storage account For Boot Diagnostics"
 			}
 		},
@@ -204,8 +206,8 @@
 						"enabled": true,
 						"storageUri": "[concat('https://', parameters('storageUri'), '.blob.core.windows.net')]"
 					}
-				}			
-			}			
+				}
+			}
 		}
 	],
 	"outputs": {

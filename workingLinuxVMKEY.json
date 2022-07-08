@@ -1,9 +1,18 @@
 {
 	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
+	"metadata": {
+		"description": "Prepares a Red Hat Linux VM.",
+		"author": "Ryan McCallum",
+		"alias": "RYMCCALL",
+		"GitHub": "https://github.com/rjmccallumbigl/Azure-ARM-Templates",
+		"Enablement": "https://docs.microsoft.com/en-us/azure/virtual-machines/linux/quick-create-template",
+		"deploymentLink": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2f%2fraw.githubusercontent.com%2frjmccallumbigl%2fAzure-ARM-Templates%2fmain%2fworkingLinuxVMKEY.json"
+	},
 	"parameters": {
 		"adminUsername": {
 			"type": "String",
+			"maxLength": 20,
 			"metadata": {
 				"description": "Username for the Virtual Machine."
 			}
@@ -56,7 +65,7 @@
 		"subnetName": "Subnet",
 		"subnetPrefix": "10.0.0.0/24",
 		"subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]",
-		"vmName": "MyVM",
+		"vmName": "rhelVM",
 		"virtualNetworkName": "MyVNET",
 		"publicIPAddressName": "myPublicIP",
 		"networkSecurityGroupName": "default-NSG"

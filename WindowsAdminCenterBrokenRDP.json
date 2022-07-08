@@ -1,15 +1,25 @@
 {
 	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
+	"metadata": {
+		"description": "You RDP config is incorrect, preventing RDP connectivity to the Public IP. You can troubleshoot with Windows Admin Center.",
+		"author": "Ryan McCallum",
+		"alias": "RYMCCALL",
+		"GitHub": "https://github.com/rjmccallumbigl/Azure-ARM-Templates",
+		"Enablement": "https://docs.microsoft.com/en-us/windows-server/manage/windows-admin-center/azure/manage-vm",
+		"deploymentLink": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2f%2fraw.githubusercontent.com%2frjmccallumbigl%2fAzure-ARM-Templates%2fmain%2fWindowsAdminCenterBrokenRDP.json"
+	},
 	"parameters": {
 		"adminUsername": {
 			"type": "string",
+			"maxLength": 20,
 			"metadata": {
 				"description": "Username for the Virtual Machine."
 			}
 		},
 		"adminPassword": {
 			"type": "securestring",
+			"minLength": 12,
 			"metadata": {
 				"description": "Password for the Virtual Machine."
 			}
@@ -66,7 +76,7 @@
 		"subnetName": "Subnet",
 		"subnetPrefix": "10.0.0.0/24",
 		"subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]",
-		"vmName": "MyVM",
+		"vmName": "wacVM",
 		"virtualNetworkName": "MyVNET",
 		"publicIPAddressName": "myPublicIP",
 		"networkSecurityGroupName": "default-NSG"
