@@ -351,13 +351,13 @@
 			}
 		},
 		{
-			"condition": "[and(not(empty(parameters('domainAccountUsername'))),not(empty(parameters('domainAccountPassword'))))]",
 			"type": "Microsoft.Compute/virtualMachines/runCommands",
 			"apiVersion": "2021-11-01",
 			"name": "[concat('DC1','/addDomainUserWithRunCommand')]",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
-				"[resourceId('Microsoft.Resources/deployments', 'ADDC')]"
+				"[resourceId('Microsoft.Resources/deployments', 'ADDC')]",
+				"[concat('Microsoft.Resources/deployments/','AppServer')]"
 			],
 			"properties": {
 				"protectedParameters": [
@@ -379,7 +379,8 @@
 			"name": "[concat('APP1','/addDomainUserToApp1WithRunCommand')]",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
-				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]"
+				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]",
+				"[concat('Microsoft.Resources/deployments/','AppServer')]"
 			],
 			"properties": {
 				"protectedParameters": [
@@ -401,15 +402,10 @@
 			"name": "[concat('APP1','/injectIncorrectDNSWithRunCommand')]",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
-				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'APP1', 'addDomainUserToApp1WithRunCommand')]"
+				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'APP1', 'addDomainUserToApp1WithRunCommand')]",
+				"[concat('Microsoft.Resources/deployments/','AppServer')]"
 			],
 			"properties": {
-				"protectedParameters": [
-					{
-						"name": "pass",
-						"value": "[parameters('domainAccountPassword')]"
-					}
-				],
 				"source": {
 					"script": "[concat('Set-DnsClientServerAddress -InterfaceIndex (Get-NetAdapter -Name Ethernet*)[0].ifIndex -ServerAddresses (\"0.0.0.0\");')]"
 				},
