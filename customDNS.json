@@ -390,7 +390,7 @@
 					}
 				],
 				"source": {
-					"script": "[concat('param([string]$pass); cmd /c ''(net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''(net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c \"(netdom remove ', variables('VMs').appVmName, ' /domain:', parameters('domainName'), ' /userD:', parameters('domainAccountUsername'), ' /passwordD:$($pass) /reboot:10 /Force)\";')]"
+					"script": "[concat('param([string]$pass); cmd /c ''(net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''(net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add)'';')]"
 				},
 				"timeoutInSeconds": 60
 			}
@@ -407,7 +407,7 @@
 			],
 			"properties": {
 				"source": {
-					"script": "[concat('Set-DnsClientServerAddress -InterfaceIndex (Get-NetAdapter -Name Ethernet*)[0].ifIndex -ServerAddresses (\"0.0.0.0\");')]"
+					"script": "[concat('$wql = ''SELECT * FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled=True''; $args = @{ DnsDomain = ''fabrikam.com''};Invoke-CimMethod -MethodName SetDNSDomain -Arguments $args -Query $wql; Set-DnsClientServerAddress -InterfaceIndex (Get-NetAdapter -Name Ethernet*)[0].ifIndex -ServerAddresses (\"0.0.0.0\");')]"
 				},
 				"timeoutInSeconds": 60
 			}
