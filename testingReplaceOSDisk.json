@@ -1,0 +1,336 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"metadata": {
+		"description": "You cannot use the CMD prompt from the Serial Console.",
+		"author": "Ryan McCallum",
+		"alias": "RYMCCALL",
+		"GitHub": "https://github.com/rjmccallumbigl/Azure-ARM-Templates",
+		"Enablement": "https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc787940(v%3dws.10)",
+		"deploymentLink": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2f%2fraw.githubusercontent.com%2frjmccallumbigl%2fAzure-ARM-Templates%2fmain%2fsacDisabled.json"
+	},
+	"parameters": {
+		"adminUsername": {
+			"type": "String",
+			"maxLength": 20,
+			"metadata": {
+				"description": "Username for the Virtual Machine."
+			}
+		},
+		"adminPassword": {
+			"type": "SecureString",
+			"minLength": 12,
+			"metadata": {
+				"description": "Password for the Virtual Machine."
+			}
+		},
+		"location": {
+			"defaultValue": "[resourceGroup().location]",
+			"type": "String",
+			"metadata": {
+				"description": "Location for all resources."
+			}
+		},
+		"vmSize": {
+			"defaultValue": "Standard_D2_v3",
+			"type": "String",
+			"metadata": {
+				"description": "Default VM Size"
+			}
+		},
+		"dnsNameForPublicIP": {
+			"defaultValue": "[tolower(concat('dns', uniquestring(resourceGroup().id)))]",
+			"type": "String",
+			"metadata": {
+				"description": "DNS name for the public IP"
+			}
+		},
+		"storageUri": {
+			"defaultValue": "[format('store{0}', uniqueString(resourceGroup().id))]",
+			"type": "string",
+			"metadata": {
+				"description": "Name of storage account For Boot Diagnostics"
+			}
+		},
+		"storageAccountType": {
+			"type": "string",
+			"defaultValue": "Standard_LRS",
+			"metadata": {
+				"description": "Storage Account type"
+			}
+		}
+	},
+	"variables": {
+		"nicName": "myVMNic",
+		"addressPrefix": "10.0.0.0/16",
+		"subnetName": "Subnet",
+		"subnetPrefix": "10.0.0.0/24",
+		"subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]",
+		"vmName": "sacDisabled",
+		"virtualNetworkName": "MyVNET",
+		"publicIPAddressName": "myPublicIP",
+		"networkSecurityGroupName": "default-NSG",
+		"userIdentity": "[tolower(concat('ui-', uniquestring(resourceGroup().id)))]",
+		"utcValue": "[utcNow()]"
+	},
+	"resources": [
+		{
+			"type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+			"name": "[variables('userIdentity')]",
+			"apiVersion": "2018-11-30",
+			"location": "[parameters('location')]"
+		},
+		{
+			"type": "Microsoft.Network/publicIPAddresses",
+			"apiVersion": "2020-08-01",
+			"name": "[variables('publicIPAddressName')]",
+			"location": "[parameters('location')]",
+			"properties": {
+				"publicIPAllocationMethod": "Dynamic",
+				"dnsSettings": {
+					"domainNameLabel": "[parameters('dnsNameForPublicIP')]"
+				}
+			}
+		},
+		{
+			"type": "Microsoft.Network/networkSecurityGroups",
+			"apiVersion": "2020-08-01",
+			"name": "[variables('networkSecurityGroupName')]",
+			"location": "[parameters('location')]",
+			"properties": {
+				"securityRules": [
+					{
+						"name": "default-allow-3389",
+						"properties": {
+							"priority": 1000,
+							"access": "Allow",
+							"direction": "Inbound",
+							"destinationPortRange": "3389",
+							"protocol": "Tcp",
+							"sourceAddressPrefix": "*",
+							"sourcePortRange": "*",
+							"destinationAddressPrefix": "*"
+						}
+					}
+				]
+			}
+		},
+		{
+			"type": "Microsoft.Network/virtualNetworks",
+			"apiVersion": "2020-08-01",
+			"name": "[variables('virtualNetworkName')]",
+			"location": "[parameters('location')]",
+			"dependsOn": [
+				"[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+			],
+			"properties": {
+				"addressSpace": {
+					"addressPrefixes": [
+						"[variables('addressPrefix')]"
+					]
+				},
+				"subnets": [
+					{
+						"name": "[variables('subnetName')]",
+						"properties": {
+							"addressPrefix": "[variables('subnetPrefix')]",
+							"networkSecurityGroup": {
+								"id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"type": "Microsoft.Network/networkInterfaces",
+			"apiVersion": "2020-08-01",
+			"name": "[variables('nicName')]",
+			"location": "[parameters('location')]",
+			"dependsOn": [
+				"[variables('publicIPAddressName')]",
+				"[variables('virtualNetworkName')]"
+			],
+			"properties": {
+				"ipConfigurations": [
+					{
+						"name": "ipconfig1",
+						"properties": {
+							"privateIPAllocationMethod": "Dynamic",
+							"publicIPAddress": {
+								"id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('publicIPAddressName'))]"
+							},
+							"subnet": {
+								"id": "[variables('subnetRef')]"
+							}
+						}
+					}
+				]
+			}
+		},
+		{
+			"type": "Microsoft.Storage/storageAccounts",
+			"apiVersion": "2021-06-01",
+			"name": "[parameters('storageUri')]",
+			"location": "[parameters('location')]",
+			"sku": {
+				"name": "[parameters('storageAccountType')]"
+			},
+			"kind": "StorageV2",
+			"properties": {}
+		},
+		{
+			"type": "Microsoft.Compute/virtualMachines",
+			"apiVersion": "2020-12-01",
+			"name": "[variables('vmName')]",
+			"location": "[parameters('location')]",
+			"identity": {
+				"type": "UserAssigned",
+				"userAssignedIdentities": {
+					"[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('userIdentity'))]": {}
+				}
+			},
+			"dependsOn": [
+				"[variables('nicName')]",
+				"[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userIdentity'))]"
+			],
+			"properties": {
+				"hardwareProfile": {
+					"vmSize": "[parameters('vmSize')]"
+				},
+				"osProfile": {
+					"computerName": "[variables('vmName')]",
+					"adminUsername": "[parameters('adminUsername')]",
+					"adminPassword": "[parameters('adminPassword')]"
+				},
+				"storageProfile": {
+					"imageReference": {
+						"publisher": "MicrosoftWindowsServer",
+						"offer": "WindowsServer",
+						"sku": "2019-Datacenter",
+						"version": "latest"
+					},
+					"osDisk": {
+						"createOption": "FromImage",
+						"managedDisk": {
+							"storageAccountType": "StandardSSD_LRS"
+						},
+						"name": "primaryOsDisk"
+					}
+				},
+				"networkProfile": {
+					"networkInterfaces": [
+						{
+							"id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
+						}
+					]
+				},
+				"diagnosticsProfile": {
+					"bootDiagnostics": {
+						"enabled": true,
+						"storageUri": "[concat('https://', parameters('storageUri'), '.blob.core.windows.net')]"
+					}
+				}
+			},
+			"resources": [
+				// {
+				// 	"type": "extensions",
+				// 	"apiVersion": "2020-12-01",
+				// 	"name": "CustomScriptExtension",
+				// 	"location": "[parameters('location')]",
+				// 	"dependsOn": [
+				// 		"[variables('vmName')]"
+				// 	],
+				// 	"properties": {
+				// 		"publisher": "Microsoft.Compute",
+				// 		"type": "CustomScriptExtension",
+				// 		"typeHandlerVersion": "1.8",
+				// 		"autoUpgradeMinorVersion": true,
+				// 		"settings": {
+				// 			"commandToExecute": "powershell Set-Service -Name 'SACDRV' -StartupType Disabled; powershell Restart-Computer -Force"
+				// 		}
+				// 	}
+				// }
+			]
+		},
+		{
+			"type": "Microsoft.Compute/snapshots",
+			"apiVersion": "2019-03-01",
+			"name": "snapshot",
+			"location": "[parameters('location')]",
+			"dependsOn": [
+				"[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+			],
+			"properties": {
+				"creationData": {
+					"createOption": "Copy",
+					"sourceResourceId": "[resourceId('Microsoft.Compute/disks','primaryOsDisk')]"
+				}
+			}
+		},
+		{
+			"type": "Microsoft.Resources/deploymentScripts",
+			"apiVersion": "2020-10-01",
+			"name": "osDiskSwap",
+			"location": "[parameters('location')]",
+			"dependsOn": [
+				"[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userIdentity'))]",
+				"[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+			],
+			"identity": {
+				"type": "UserAssigned",
+				"userAssignedIdentities": {
+					"[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userIdentity')))]": {}
+				}
+			},
+			"kind": "AzurePowerShell",
+			"properties": {
+				"forceUpdateTag": "[variables('utcValue')]",
+				"azPowerShellVersion": "3.0",
+				"timeout": "PT30M",
+				"arguments": "[format(' -rgName {0} -vmName {1} -location {2}', resourceGroup().name, variables('vmName'), parameters('location'))]",
+				"scriptContent": "
+				# https://docs.microsoft.com/en-us/azure/virtual-machines/windows/os-disk-swap
+				param(
+					[string] [Parameter(Mandatory=$true)] $rgName,
+					[string] [Parameter(Mandatory=$true)] $vmName,
+					[string] [Parameter(Mandatory=$true)] $location
+				)
+      			$ErrorActionPreference = 'Stop'
+
+				# Get the VM
+				$vm = Get-AzVM -ResourceGroupName $rgName -Name $vmName
+
+				# Stop/deallocate the VM
+				Stop-AzVM -ResourceGroupName $rgName -Name $vm.Name -Force
+
+				# Create disk from snapshot
+				$today = $(Get-Date -Format MM-dd-yyyy).ToString()
+				$snapshotName = 'snapshot'
+				$snapshot = get-azSnapshot -SnapshotName $snapshotName -ResourceGroupName $rgName
+				$diskName = '$($snapshotName)_disk'
+				$diskInfo = Get-AzDisk -ResourceGroupName $rgName -DiskName $vm.StorageProfile.OsDisk.Name
+				$diskSize = $diskInfo.DiskSizeGB
+				$diskConfig = New-AzDiskConfig -SkuName $diskInfo.sku.name -Location $location -CreateOption Copy -SourceResourceId $snapshot.Id -DiskSizeGB $diskSize
+				$disk = New-AzDisk -Disk $diskConfig -ResourceGroupName $rgName -DiskName $diskName
+
+				# Set the VM configuration to point to the new disk
+				Set-AzVMOSDisk -VM $vm -ManagedDiskId $disk.Id -Name $disk.Name
+
+				# Update the VM with the new OS disk
+				Update-AzVM -ResourceGroupName $rgName -VM $vm
+
+				# Start the VM
+				Start-AzVM -Name $vm.Name -ResourceGroupName $rgName
+			"
+			}
+		}
+	],
+
+	"outputs": {
+		"vm-fqdn": {
+			"type": "String",
+			"value": "[reference(variables('publicIPAddressName'), '2020-07-01').dnsSettings.fqdn]"
+		}
+	}
+}
