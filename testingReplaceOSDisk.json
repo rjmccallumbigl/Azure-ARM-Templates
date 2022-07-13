@@ -330,7 +330,7 @@
 				"forceUpdateTag": "[parameters('utcValue')]",
 				"azPowerShellVersion": "3.0",
 				"timeout": "PT30M",
-				"arguments": "[format(' -rgName {0} -vmName {1} -subID {2}', resourceGroup().name, variables('vmName'), subscription().id)]",
+				"arguments": "[format(' -rgName {0} -vmName {1} -subID {2}', resourceGroup().name, variables('vmName'), subscription().subscriptionId)]",
 				"scriptContent": "param( [string] [Parameter(Mandatory=$true)] $rgName, [string] [Parameter(Mandatory=$true)] $vmName, [string] [Parameter(Mandatory=$true)] $subID); $ErrorActionPreference = 'Stop'; Set-AzContext -Subscription $subID; Set-AzDefault -ResourceGroupName $rgName; $vm = Get-AzVM -ResourceGroupName $rgName -Name $vmName; Stop-AzVM -ResourceGroupName $rgName -Name $vm.Name -Force; $disk = Get-AzDisk -ResourceGroupName $rgName -DiskName 'snapshotDisk'; Set-AzVMOSDisk -VM $vm -ManagedDiskId $disk.Id -Name $disk.Name; Update-AzVM -ResourceGroupName $rgName -VM $vm; Start-AzVM -Name $vm.Name -ResourceGroupName $rgName;",
 				"cleanupPreference": "OnSuccess",
 				"retentionInterval": "P1D"
