@@ -58,6 +58,13 @@
 			"metadata": {
 				"description": "Storage Account type"
 			}
+		},
+		"utcValue": {
+			"defaultValue": "[utcNow()]",
+			"type": "string",
+			"metadata": {
+				"description": "UTC"
+			}
 		}
 	},
 	"variables": {
@@ -70,8 +77,7 @@
 		"virtualNetworkName": "MyVNET",
 		"publicIPAddressName": "myPublicIP",
 		"networkSecurityGroupName": "default-NSG",
-		"userIdentity": "[tolower(concat('ui-', uniquestring(resourceGroup().id)))]",
-		"utcValue": "[utcNow()]"
+		"userIdentity": "[tolower(concat('ui-', uniquestring(resourceGroup().id)))]"
 	},
 	"resources": [
 		{
@@ -285,7 +291,7 @@
 			},
 			"kind": "AzurePowerShell",
 			"properties": {
-				"forceUpdateTag": "[variables('utcValue')]",
+				"forceUpdateTag": "[parameters('utcValue')]",
 				"azPowerShellVersion": "3.0",
 				"timeout": "PT30M",
 				"arguments": "[format(' -rgName {0} -vmName {1} -location {2}', resourceGroup().name, variables('vmName'), parameters('location'))]",
