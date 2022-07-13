@@ -290,6 +290,25 @@
 			}
 		},
 		{
+			"type": "Microsoft.Compute/disks",
+			"apiVersion": "2018-06-01",
+			"name": "snapshotDisk",
+			"location": "[parameters('location')]",
+			"sku": {
+				"name": "Standard_LRS"
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Compute/snapshots', 'snapshot')]"
+			],
+			"properties": {
+				"creationData": {
+					"createOption": "Copy",
+					"sourceResourceId": "[resourceId('Microsoft.Compute/snapshots','snapshot')]"
+				},
+				"diskSizeGB": 1023
+			}
+		},
+		{
 			"type": "Microsoft.Resources/deploymentScripts",
 			"apiVersion": "2020-10-01",
 			"name": "osDiskSwap",
@@ -297,7 +316,8 @@
 			"dependsOn": [
 				"[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userIdentity'))]",
 				"[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]",
-				"[resourceId('Microsoft.Compute/snapshots', 'snapshot')]"
+				"[resourceId('Microsoft.Compute/snapshots', 'snapshot')]",
+				"[resourceId('Microsoft.Compute/disks', 'snapshotDisk')]"
 			],
 			"identity": {
 				"type": "UserAssigned",
@@ -310,8 +330,8 @@
 				"forceUpdateTag": "[parameters('utcValue')]",
 				"azPowerShellVersion": "3.0",
 				"timeout": "PT30M",
-				"arguments": "[format(' -rgName {0} -vmName {1} -location {2}', resourceGroup().name, variables('vmName'), parameters('location'))]",
-				"scriptContent": "param( [string] [Parameter(Mandatory=$true)] $rgName, [string] [Parameter(Mandatory=$true)] $vmName, [string] [Parameter(Mandatory=$true)] $location ); $ErrorActionPreference = 'Stop'; $vm = Get-AzVM -ResourceGroupName $rgName -Name $vmName; Stop-AzVM -ResourceGroupName $rgName -Name $vm.Name -Force; $today = $(Get-Date -Format MM-dd-yyyy).ToString(); $snapshotName = 'snapshot'; $snapshot = get-azSnapshot -SnapshotName $snapshotName -ResourceGroupName $rgName; $diskName = '$($snapshotName)_disk'; $diskInfo = Get-AzDisk -ResourceGroupName $rgName -DiskName $vm.StorageProfile.OsDisk.Name; $diskSize = $diskInfo.DiskSizeGB; $diskConfig = New-AzDiskConfig -SkuName $diskInfo.sku.name -Location $location -CreateOption Copy -SourceResourceId $snapshot.Id -DiskSizeGB $diskSize; $disk = New-AzDisk -Disk $diskConfig -ResourceGroupName $rgName -DiskName $diskName; Set-AzVMOSDisk -VM $vm -ManagedDiskId $disk.Id -Name $disk.Name; Update-AzVM -ResourceGroupName $rgName -VM $vm; Start-AzVM -Name $vm.Name -ResourceGroupName $rgName;",
+				"arguments": "[format(' -rgName {0} -vmName {1} -subID {2}', resourceGroup().name, variables('vmName'), subscription().id)]",
+				"scriptContent": "param( [string] [Parameter(Mandatory=$true)] $rgName, [string] [Parameter(Mandatory=$true)] $vmName, [string] [Parameter(Mandatory=$true)] $subID); $ErrorActionPreference = 'Stop'; Set-AzContext -Subscription $subID; Set-AzDefault -ResourceGroupName $rgName; $vm = Get-AzVM -ResourceGroupName $rgName -Name $vmName; Stop-AzVM -ResourceGroupName $rgName -Name $vm.Name -Force; $disk = Get-AzDisk -ResourceGroupName $rgName -DiskName 'snapshotDisk'; Set-AzVMOSDisk -VM $vm -ManagedDiskId $disk.Id -Name $disk.Name; Update-AzVM -ResourceGroupName $rgName -VM $vm; Start-AzVM -Name $vm.Name -ResourceGroupName $rgName;",
 				"cleanupPreference": "OnSuccess",
 				"retentionInterval": "P1D"
 			}
