@@ -7,7 +7,7 @@
 		"alias": "RYMCCALL",
 		"GitHub": "https://github.com/rjmccallumbigl/Azure-ARM-Templates",
 		"Enablement": "https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc787940(v%3dws.10)",
-		"deploymentLink": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2f%2fraw.githubusercontent.com%2frjmccallumbigl%2fAzure-ARM-Templates%2fmain%2fsacDisabled.json"
+		"deploymentLink": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2f%2fraw.githubusercontent.com%2frjmccallumbigl%2fAzure-ARM-Templates%2fmain%2ftestingReplaceOSDisk.json"
 	},
 	"parameters": {
 		"adminUsername": {
@@ -289,40 +289,7 @@
 				"azPowerShellVersion": "3.0",
 				"timeout": "PT30M",
 				"arguments": "[format(' -rgName {0} -vmName {1} -location {2}', resourceGroup().name, variables('vmName'), parameters('location'))]",
-				"scriptContent": "
-				# https://docs.microsoft.com/en-us/azure/virtual-machines/windows/os-disk-swap
-				param(
-					[string] [Parameter(Mandatory=$true)] $rgName,
-					[string] [Parameter(Mandatory=$true)] $vmName,
-					[string] [Parameter(Mandatory=$true)] $location
-				)
-      			$ErrorActionPreference = 'Stop'
-
-				# Get the VM
-				$vm = Get-AzVM -ResourceGroupName $rgName -Name $vmName
-
-				# Stop/deallocate the VM
-				Stop-AzVM -ResourceGroupName $rgName -Name $vm.Name -Force
-
-				# Create disk from snapshot
-				$today = $(Get-Date -Format MM-dd-yyyy).ToString()
-				$snapshotName = 'snapshot'
-				$snapshot = get-azSnapshot -SnapshotName $snapshotName -ResourceGroupName $rgName
-				$diskName = '$($snapshotName)_disk'
-				$diskInfo = Get-AzDisk -ResourceGroupName $rgName -DiskName $vm.StorageProfile.OsDisk.Name
-				$diskSize = $diskInfo.DiskSizeGB
-				$diskConfig = New-AzDiskConfig -SkuName $diskInfo.sku.name -Location $location -CreateOption Copy -SourceResourceId $snapshot.Id -DiskSizeGB $diskSize
-				$disk = New-AzDisk -Disk $diskConfig -ResourceGroupName $rgName -DiskName $diskName
-
-				# Set the VM configuration to point to the new disk
-				Set-AzVMOSDisk -VM $vm -ManagedDiskId $disk.Id -Name $disk.Name
-
-				# Update the VM with the new OS disk
-				Update-AzVM -ResourceGroupName $rgName -VM $vm
-
-				# Start the VM
-				Start-AzVM -Name $vm.Name -ResourceGroupName $rgName
-			"
+				"scriptContent": "param( [string] [Parameter(Mandatory=$true)] $rgName, [string] [Parameter(Mandatory=$true)] $vmName, [string] [Parameter(Mandatory=$true)] $location ); $ErrorActionPreference = 'Stop'; $vm = Get-AzVM -ResourceGroupName $rgName -Name $vmName; Stop-AzVM -ResourceGroupName $rgName -Name $vm.Name -Force; $today = $(Get-Date -Format MM-dd-yyyy).ToString(); $snapshotName = 'snapshot'; $snapshot = get-azSnapshot -SnapshotName $snapshotName -ResourceGroupName $rgName; $diskName = '$($snapshotName)_disk'; $diskInfo = Get-AzDisk -ResourceGroupName $rgName -DiskName $vm.StorageProfile.OsDisk.Name; $diskSize = $diskInfo.DiskSizeGB; $diskConfig = New-AzDiskConfig -SkuName $diskInfo.sku.name -Location $location -CreateOption Copy -SourceResourceId;$snapshot.Id -DiskSizeGB $diskSize; $disk = New-AzDisk -Disk $diskConfig -ResourceGroupName $rgName -DiskName $diskName; Set-AzVMOSDisk -VM $vm -ManagedDiskId $disk.Id -Name $disk.Name; Update-AzVM -ResourceGroupName $rgName -VM $vm; Start-AzVM -Name $vm.Name -ResourceGroupName $rgName;"
 			}
 		}
 	],
