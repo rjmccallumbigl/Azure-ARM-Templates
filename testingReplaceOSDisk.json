@@ -236,6 +236,7 @@
 						"managedDisk": {
 							"storageAccountType": "StandardSSD_LRS"
 						},
+						"diskSizeGB": 127,
 						"name": "primaryOsDisk"
 					}
 				},
@@ -305,7 +306,7 @@
 					"createOption": "Copy",
 					"sourceResourceId": "[resourceId('Microsoft.Compute/snapshots','snapshot')]"
 				},
-				"diskSizeGB": 1023
+				"diskSizeGB": 127
 			}
 		},
 		{
