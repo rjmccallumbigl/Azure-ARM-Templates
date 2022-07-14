@@ -418,7 +418,6 @@
 			}
 		},
 		{
-			"condition": "[and(not(empty(parameters('domainAccountUsername'))),not(empty(parameters('domainAccountPassword'))))]",
 			"type": "Microsoft.Compute/virtualMachines/runCommands",
 			"apiVersion": "2021-11-01",
 			"name": "[concat('APP1','/resetApp1PasswordWithRunCommand')]",
@@ -485,7 +484,8 @@
 				"[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userIdentity'))]",
 				"[resourceId('Microsoft.Resources/deployments', 'ADDC')]",
 				"[resourceId('Microsoft.Resources/deployments', 'AppServer')]",
-				"[resourceId('Microsoft.Compute/disks', 'snapshotDisk')]"
+				"[resourceId('Microsoft.Compute/disks', 'snapshotDisk')]",
+				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'APP1', 'resetApp1PasswordWithRunCommand')]"
 
 			],
 			"identity": {
