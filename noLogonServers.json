@@ -2,12 +2,12 @@
 	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"metadata": {
-		"description": "When connecting to your client machine, you receive the error message 'The trust relationship between this workstation and the primary domain failed'.",
+		"description": "You set the server's custom DNS on the guest OS instead of via the Azure platform, disrupting domain account connectivity.",
 		"author": "Ryan McCallum",
 		"alias": "RYMCCALL",
 		"GitHub": "https://github.com/rjmccallumbigl/Azure-ARM-Templates",
-		"Enablement": "https://docs.microsoft.com/en-us/troubleshoot/azure/virtual-machines/troubleshoot-broken-secure-channel",
-		"deploymentLink": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2f%2fraw.githubusercontent.com%2frjmccallumbigl%2fAzure-ARM-Templates%2fmain%2ftrustRelationshipBroke.json"
+		"Enablement": "https://www.dell.com/support/kbdoc/en-us/000123346/windows-login-no-logon-servers-available",
+		"deploymentLink": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2f%2fraw.githubusercontent.com%2frjmccallumbigl%2fAzure-ARM-Templates%2fmain%2fnoLogonServers.json"
 	},
 	"parameters": {
 		"configName": {
@@ -84,13 +84,6 @@
 				"description": "Auto-generated token to access _artifactsLocation."
 			},
 			"defaultValue": ""
-		},
-		"utcValue": {
-			"defaultValue": "[utcNow()]",
-			"type": "string",
-			"metadata": {
-				"description": "UTC"
-			}
 		}
 	},
 	"variables": {
@@ -131,47 +124,9 @@
 			"storageAccountNamePrefix": "[variables('storageAccountName')]",
 			"sasToken": "[parameters('_artifactsLocationSasToken')]",
 			"domainName": "[parameters('domainName')]"
-		},
-		"userIdentity": "[tolower(concat('ui-', uniquestring(resourceGroup().id)))]",
-		"bootstrapRoleAssignmentId": "[guid(concat(resourceGroup().id, 'contributor'))]",
-		"contributorRoleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]"
+		}
 	},
 	"resources": [
-		{
-			"type": "Microsoft.ManagedIdentity/userAssignedIdentities",
-			"name": "[variables('userIdentity')]",
-			"apiVersion": "2018-11-30",
-			"location": "[resourceGroup().location]"
-		},
-		{
-			"type": "Microsoft.Authorization/roleAssignments",
-			"apiVersion": "2018-09-01-preview",
-			"name": "[variables('bootstrapRoleAssignmentId')]",
-			"dependsOn": [
-				"[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userIdentity'))]"
-			],
-			"properties": {
-				"roleDefinitionId": "[variables('contributorRoleDefinitionId')]",
-				"principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userIdentity')), '2018-11-30').principalId]",
-				"principalType": "ServicePrincipal"
-			}
-		},
-		{
-			"apiVersion": "2018-06-01",
-			"type": "Microsoft.Compute/virtualMachines",
-			"name": "[variables('VMs').appVmName]",
-			"location": "[resourceGroup().location]",
-			"identity": {
-				"type": "userAssigned",
-				"userAssignedIdentities": {
-					"[resourceID('Microsoft.ManagedIdentity/userAssignedIdentities/',variables('userIdentity'))]": {}
-				}
-			},
-			"dependsOn": [
-				"[resourceId('Microsoft.Resources/deployments', 'AppServer')]",
-				"[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userIdentity'))]"
-			]
-		},
 		{
 			"apiVersion": "2018-01-01",
 			"type": "Microsoft.Network/networkSecurityGroups",
@@ -401,7 +356,8 @@
 			"name": "[concat('DC1','/addDomainUserWithRunCommand')]",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
-				"[resourceId('Microsoft.Resources/deployments', 'ADDC')]"
+				"[resourceId('Microsoft.Resources/deployments', 'ADDC')]",
+				"[concat('Microsoft.Resources/deployments/','AppServer')]"
 			],
 			"properties": {
 				"protectedParameters": [
@@ -417,12 +373,14 @@
 			}
 		},
 		{
+			"condition": "[and(not(empty(parameters('domainAccountUsername'))),not(empty(parameters('domainAccountPassword'))))]",
 			"type": "Microsoft.Compute/virtualMachines/runCommands",
 			"apiVersion": "2021-11-01",
 			"name": "[concat('APP1','/addDomainUserToApp1WithRunCommand')]",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
-				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]"
+				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]",
+				"[concat('Microsoft.Resources/deployments/','AppServer')]"
 			],
 			"properties": {
 				"protectedParameters": [
@@ -432,100 +390,28 @@
 					}
 				],
 				"source": {
-					"script": "[concat('net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add; net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add;')]"
+					"script": "[concat('param([string]$pass); cmd /c ''(net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''(net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add)'';')]"
 				},
 				"timeoutInSeconds": 60
 			}
 		},
 		{
+			"condition": "[and(not(empty(parameters('domainAccountUsername'))),not(empty(parameters('domainAccountPassword'))))]",
 			"type": "Microsoft.Compute/virtualMachines/runCommands",
 			"apiVersion": "2021-11-01",
-			"name": "[concat('APP1','/resetApp1PasswordWithRunCommand')]",
+			"name": "[concat('APP1','/injectIncorrectDNSWithRunCommand')]",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
-				"[resourceId('Microsoft.Resources/deployments', 'ADDC')]",
-				"[resourceId('Microsoft.Resources/deployments', 'AppServer')]",
-				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]",
-				"[resourceId('Microsoft.Compute/disks', 'snapshotDisk')]"
+				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'APP1', 'addDomainUserToApp1WithRunCommand')]",
+				"[concat('Microsoft.Resources/deployments/','AppServer')]"
 			],
 			"properties": {
-				"protectedParameters": [
-					{
-						"name": "pass",
-						"value": "[parameters('domainAccountPassword')]"
-					}
-				],
 				"source": {
-					"script": "[concat('param([string]$pass); cmd /c ''(net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''(net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''net user user1 badPassword! /domain''; cmd /c \"(netdom resetpwd /server:DC1 /userd:', parameters('domainName'),'\\user1 /passwordD:badPassword!\"; Set-ItemProperty -Path ''HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp'' -Name ''UserAuthentication'' -Type DWord -Value 0; Restart-Computer -Force;')]"
+					"script": "[concat('$wql = ''SELECT * FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled=True''; $args = @{ DnsDomain = ''fabrikam.com''};Invoke-CimMethod -MethodName SetDNSDomain -Arguments $args -Query $wql; Set-DnsClientServerAddress -InterfaceIndex (Get-NetAdapter -Name Ethernet*)[0].ifIndex -ServerAddresses (\"0.0.0.0\"); Set-ItemProperty -Path ''HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp'' -Name UserAuthentication -Type DWord -Value 0; Restart-Computer -Force;')]"
 				},
 				"timeoutInSeconds": 60
 			}
-		},
-
-			{
-				"type": "Microsoft.Compute/snapshots",
-				"apiVersion": "2019-03-01",
-				"name": "snapshot",
-				"location": "[resourceGroup().location]",
-				"dependsOn": [
-					"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]"
-				],
-				"properties": {
-					"creationData": {
-						"createOption": "Copy",
-						"sourceResourceId": "[resourceId('Microsoft.Compute/disks','primaryOsDisk')]"
-					}
-				}
-			},
-			{
-				"type": "Microsoft.Compute/disks",
-				"apiVersion": "2018-06-01",
-				"name": "snapshotDisk",
-				"location": "[resourceGroup().location]",
-				"sku": {
-					"name": "Standard_LRS"
-				},
-				"dependsOn": [
-					"[resourceId('Microsoft.Compute/snapshots', 'snapshot')]"
-				],
-				"properties": {
-					"creationData": {
-						"createOption": "Copy",
-						"sourceResourceId": "[resourceId('Microsoft.Compute/snapshots','snapshot')]"
-					},
-					"diskSizeGB": 127
-				}
-			},
-			{
-				"type": "Microsoft.Resources/deploymentScripts",
-				"apiVersion": "2020-10-01",
-				"name": "osDiskSwap",
-				"location": "[resourceGroup().location]",
-				"dependsOn": [
-					"[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userIdentity'))]",
-					"[resourceId('Microsoft.Resources/deployments', 'ADDC')]",
-					"[resourceId('Microsoft.Resources/deployments', 'AppServer')]",
-					"[resourceId('Microsoft.Compute/disks', 'snapshotDisk')]",
-					"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'APP1', 'resetApp1PasswordWithRunCommand')]"
-
-				],
-				"identity": {
-					"type": "UserAssigned",
-					"userAssignedIdentities": {
-						"[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userIdentity')))]": {}
-					}
-				},
-				"kind": "AzurePowerShell",
-				"properties": {
-					"forceUpdateTag": "[parameters('utcValue')]",
-					"azPowerShellVersion": "3.0",
-					"timeout": "PT30M",
-					"arguments": "[format(' -rgName {0} -subID {1}', resourceGroup().name, subscription().subscriptionId)]",
-					"scriptContent": "param( [string] [Parameter(Mandatory=$true)] $rgName, [string] [Parameter(Mandatory=$true)] $subID); $ErrorActionPreference = 'Stop'; Set-AzContext -Subscription $subID; Set-AzDefault -ResourceGroupName $rgName; $vm = Get-AzVM -ResourceGroupName $rgName -Name 'App1'; Stop-AzVM -ResourceGroupName $rgName -Name $vm.Name -Force; $disk = Get-AzDisk -ResourceGroupName $rgName -DiskName 'snapshotDisk'; Set-AzVMOSDisk -VM $vm -ManagedDiskId $disk.Id -Name $disk.Name; Update-AzVM -ResourceGroupName $rgName -VM $vm; Start-AzVM -Name $vm.Name -ResourceGroupName $rgName;",
-					"cleanupPreference": "OnSuccess",
-					"retentionInterval": "P1D"
-				}
-			}
+		}
 	],
 	"outputs": {
 		"adminUsername": {
