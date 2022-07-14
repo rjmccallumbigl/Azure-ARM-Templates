@@ -169,8 +169,7 @@
 			},
 			"dependsOn": [
 				"[resourceId('Microsoft.Resources/deployments', 'AppServer')]",
-				"[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userIdentity'))]",
-				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'APP1', 'addDomainUserToApp1WithRunCommand')]"
+				"[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userIdentity'))]"
 			]
 		},
 		{
