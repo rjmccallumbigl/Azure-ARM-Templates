@@ -2,11 +2,11 @@
 	"$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"metadata": {
-		"description": "You cannot use the CMD prompt from the Serial Console.",
+		"description": "Testing deployment scripts.",
 		"author": "Ryan McCallum",
 		"alias": "RYMCCALL",
 		"GitHub": "https://github.com/rjmccallumbigl/Azure-ARM-Templates",
-		"Enablement": "https://docs.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc787940(v%3dws.10)",
+		"Enablement": "https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/template-tutorial-deployment-script",
 		"deploymentLink": "https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2f%2fraw.githubusercontent.com%2frjmccallumbigl%2fAzure-ARM-Templates%2fmain%2ftestingReplaceOSDisk.json"
 	},
 	"parameters": {
