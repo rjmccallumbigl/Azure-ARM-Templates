@@ -424,6 +424,8 @@
 			"name": "[concat('APP1','/resetApp1PasswordWithRunCommand')]",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deployments', 'ADDC')]",
+				"[resourceId('Microsoft.Resources/deployments', 'AppServer')]",
 				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]",
 				"[resourceId('Microsoft.Compute/disks', 'snapshotDisk')]"
 			],
@@ -481,7 +483,10 @@
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
 				"[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userIdentity'))]",
+				"[resourceId('Microsoft.Resources/deployments', 'ADDC')]",
+				"[resourceId('Microsoft.Resources/deployments', 'AppServer')]",
 				"[resourceId('Microsoft.Compute/disks', 'snapshotDisk')]"
+
 			],
 			"identity": {
 				"type": "UserAssigned",
