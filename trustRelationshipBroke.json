@@ -398,7 +398,7 @@
 		{
 			"type": "Microsoft.Compute/virtualMachines/runCommands",
 			"apiVersion": "2021-11-01",
-			"name": "[concat('DC1','/addDomainUserWithRunCommand')]",
+			"name": "[concat('DC1','/addDomainUserToDC1WithRunCommand')]",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
 				"[resourceId('Microsoft.Resources/deployments', 'ADDC')]"
@@ -422,7 +422,7 @@
 			"name": "[concat('APP1','/addDomainUserToApp1WithRunCommand')]",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
-				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]",
+				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserToDC1WithRunCommand')]",
 				"[concat('Microsoft.Resources/deployments/','AppServer')]"
 			],
 			"properties": {
@@ -446,7 +446,7 @@
 			"dependsOn": [
 				"[resourceId('Microsoft.Resources/deployments', 'ADDC')]",
 				"[resourceId('Microsoft.Resources/deployments', 'AppServer')]",
-				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]",
+				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserToDC1WithRunCommand')]",
 				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'APP1', 'addDomainUserToApp1WithRunCommand')]",
 				"[resourceId('Microsoft.Compute/disks', 'snapshotDisk')]"
 			],
@@ -470,7 +470,9 @@
 				"name": "snapshot",
 				"location": "[resourceGroup().location]",
 				"dependsOn": [
-					"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]"
+					"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserToDC1WithRunCommand')]",
+					"[resourceId('Microsoft.Resources/deployments', 'AppServer')]",
+					"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'APP1', 'addDomainUserToApp1WithRunCommand')]"
 				],
 				"properties": {
 					"creationData": {
