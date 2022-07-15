@@ -422,7 +422,8 @@
 			"name": "[concat('APP1','/addDomainUserToApp1WithRunCommand')]",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
-				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]"
+				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]",
+				"[concat('Microsoft.Resources/deployments/','AppServer')]"
 			],
 			"properties": {
 				"protectedParameters": [
@@ -446,6 +447,7 @@
 				"[resourceId('Microsoft.Resources/deployments', 'ADDC')]",
 				"[resourceId('Microsoft.Resources/deployments', 'AppServer')]",
 				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]",
+				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'APP1', 'addDomainUserToApp1WithRunCommand')]",
 				"[resourceId('Microsoft.Compute/disks', 'snapshotDisk')]"
 			],
 			"properties": {
