@@ -462,8 +462,6 @@
 				},
 				"timeoutInSeconds": 60
 			}
-			// Start-Process -FilePath "powershell" -Verb RunAs -ArgumentList '-noexit net user user1 badPassword2! /domain;;'
-// Start-Process -FilePath "powershell" -Verb RunAs -ArgumentList '-noexit netdom resetpwd /server:DC1 /userd:corp.contoso.com\user1 /passwordD:badPassword1!;'
 		},
 
 			{
