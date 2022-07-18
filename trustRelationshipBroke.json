@@ -458,10 +458,12 @@
 					}
 				],
 				"source": {
-					"script": "[concat('param([string]$pass); cmd /c ''(net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''(net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add)''; cmd /c ''net user user1 badPassword! /domain''; cmd /c \"(netdom resetpwd /server:DC1 /userd:', parameters('domainName'),'\\user1 /passwordD:badPassword!\"; Set-ItemProperty -Path ''HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp'' -Name ''UserAuthentication'' -Type DWord -Value 0; Restart-Computer -Force;')]"
+					"script": "[concat('net localgroup ''remote desktop users'' \"', parameters('domainAccountUsername'), '\" /add; net localgroup ''administrators'' \"', parameters('domainAccountUsername'), '\" /add; net user user1 badPassword! /domain; netdom resetpwd /server:DC1 /userd:', parameters('domainName'),'\\user1 /passwordD:badPassword!; netdom resetpwd /server:DC1 /userd:', parameters('domainName'),'\\user1 /passwordD:badPassword!; Set-ItemProperty -Path ''HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp'' -Name ''UserAuthentication'' -Type DWord -Value 0; Restart-Computer -Force;')]"
 				},
 				"timeoutInSeconds": 60
 			}
+			// Start-Process -FilePath "powershell" -Verb RunAs -ArgumentList '-noexit net user user1 badPassword2! /domain;;'
+// Start-Process -FilePath "powershell" -Verb RunAs -ArgumentList '-noexit netdom resetpwd /server:DC1 /userd:corp.contoso.com\user1 /passwordD:badPassword1!;'
 		},
 
 			{
