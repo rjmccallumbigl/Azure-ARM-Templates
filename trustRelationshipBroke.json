@@ -514,7 +514,10 @@
 					"[resourceId('Microsoft.Resources/deployments', 'ADDC')]",
 					"[resourceId('Microsoft.Resources/deployments', 'AppServer')]",
 					"[resourceId('Microsoft.Compute/disks', 'snapshotDisk')]",
-					"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'APP1', 'resetApp1PasswordWithRunCommand')]"
+					"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'APP1', 'resetApp1PasswordWithRunCommand')]",
+					"[resourceId('Microsoft.Authorization/roleAssignments', variables('bootstrapRoleAssignmentId'))]",
+					"[resourceId('Microsoft.Compute/snapshots', 'snapshot')]",
+					"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'APP1', 'addDomainUserToApp1WithRunCommand')]"
 
 				],
 				"identity": {
