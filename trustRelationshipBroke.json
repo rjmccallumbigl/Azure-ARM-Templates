@@ -423,7 +423,9 @@
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
 				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserToDC1WithRunCommand')]",
-				"[concat('Microsoft.Resources/deployments/','AppServer')]"
+				"[concat('Microsoft.Resources/deployments/','AppServer')]",
+				"[resourceId('Microsoft.Compute/virtualMachines', variables('VMs').appVmName)]"
+
 			],
 			"properties": {
 				"protectedParameters": [
