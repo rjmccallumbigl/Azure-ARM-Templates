@@ -460,7 +460,7 @@
 					}
 				],
 				"source": {
-					"script": "[concat('Start-Transcript -Path ''C:\\Program Files\\Common Files\\transcript.txt'' -IncludeInvocationHeader -NoClobber; $debugpreference=''continue''; New-Item -Path ''HKLM:\\Software\\Policies\\Microsoft\\Windows\\PowerShell\\Transcription''; New-ItemProperty -Path ''HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\PowerShell\\Transcription'' -Name ''EnableTranscripting'' -PropertyType ''DWord'' -Value 1 -Force; New-ItemProperty -Path ''HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\PowerShell\\Transcription'' -Name ''EnableInvocationHeader'' -PropertyType ''DWord'' -Value 1 -Force; New-ItemProperty -Path ''HKLM:\\SOFTWARE\\Policies\\Microsoft\\Windows\\PowerShell\\Transcription'' -Name ''OutputDirectory'' -PropertyType ''String'' -Value ''C:\\Transcripts'' -Force; net localgroup ''remote desktop users'' \"', parameters('domainAccountUsername'), '\" /add; net localgroup ''administrators'' \"', parameters('domainAccountUsername'), '\" /add; Start-Process -FilePath ''powershell'' -Verb RunAs -ArgumentList ''net user user1 badPassword! /domain''; Start-Process -FilePath ''PowerShell'' -Verb RunAs -ArgumentList ''netdom resetpwd /server:DC1 /userd:', parameters('domainName'),'\\user1 /passwordD:badPassword!; Start-Process -FilePath ''PowerShell'' -Verb RunAs -ArgumentList ''netdom resetpwd /server:DC1 /userd:', parameters('domainName'),'\\user1 /passwordD:badPassword!; Set-ItemProperty -Path ''HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp'' -Name ''UserAuthentication'' -Type DWord -Value 0; Stop-Transcript;')]"
+					"script": "[concat('net localgroup ''remote desktop users'' \"', parameters('domainAccountUsername'), '\" /add; net localgroup ''administrators'' \"', parameters('domainAccountUsername'), '\" /add; Start-Process -FilePath ''powershell'' -Verb RunAs -ArgumentList ''net user user1 badPassword! /domain''; Start-Process -FilePath ''PowerShell'' -Verb RunAs -ArgumentList ''netdom resetpwd /server:DC1 /userd:', parameters('domainName'),'\\user1 /passwordD:badPassword!; Start-Process -FilePath ''PowerShell'' -Verb RunAs -ArgumentList ''netdom resetpwd /server:DC1 /userd:', parameters('domainName'),'\\user1 /passwordD:badPassword!; Set-ItemProperty -Path ''HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp'' -Name ''UserAuthentication'' -Type DWord -Value 0;')]"
 				},
 				"runAsUser": "[concat(parameters('domainName'), '\\', parameters('adminUsername'))]",
 				"runAsPassword": "[parameters('domainAccountPassword')]",
@@ -468,75 +468,96 @@
 			}
 		},
 
-			{
-				"type": "Microsoft.Compute/snapshots",
-				"apiVersion": "2019-03-01",
-				"name": "snapshot",
-				"location": "[resourceGroup().location]",
-				"dependsOn": [
-					"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserToDC1WithRunCommand')]",
-					"[resourceId('Microsoft.Resources/deployments', 'AppServer')]",
-					"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'APP1', 'addDomainUserToApp1WithRunCommand')]"
-				],
-				"properties": {
-					"creationData": {
-						"createOption": "Copy",
-						"sourceResourceId": "[resourceId('Microsoft.Compute/disks','primaryOsDisk')]"
-					}
-				}
-			},
-			{
-				"type": "Microsoft.Compute/disks",
-				"apiVersion": "2018-06-01",
-				"name": "snapshotDisk",
-				"location": "[resourceGroup().location]",
-				"sku": {
-					"name": "Standard_LRS"
-				},
-				"dependsOn": [
-					"[resourceId('Microsoft.Compute/snapshots', 'snapshot')]"
-				],
-				"properties": {
-					"creationData": {
-						"createOption": "Copy",
-						"sourceResourceId": "[resourceId('Microsoft.Compute/snapshots','snapshot')]"
-					},
-					"diskSizeGB": 127
-				}
-			},
-			{
-				"type": "Microsoft.Resources/deploymentScripts",
-				"apiVersion": "2020-10-01",
-				"name": "osDiskSwap",
-				"location": "[resourceGroup().location]",
-				"dependsOn": [
-					"[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userIdentity'))]",
-					"[resourceId('Microsoft.Resources/deployments', 'ADDC')]",
-					"[resourceId('Microsoft.Resources/deployments', 'AppServer')]",
-					"[resourceId('Microsoft.Compute/disks', 'snapshotDisk')]",
-					"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'APP1', 'resetApp1PasswordWithRunCommand')]",
-					"[resourceId('Microsoft.Authorization/roleAssignments', variables('bootstrapRoleAssignmentId'))]",
-					"[resourceId('Microsoft.Compute/snapshots', 'snapshot')]",
-					"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'APP1', 'addDomainUserToApp1WithRunCommand')]"
-
-				],
-				"identity": {
-					"type": "UserAssigned",
-					"userAssignedIdentities": {
-						"[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userIdentity')))]": {}
-					}
-				},
-				"kind": "AzurePowerShell",
-				"properties": {
-					"forceUpdateTag": "[parameters('utcValue')]",
-					"azPowerShellVersion": "3.0",
-					"timeout": "PT30M",
-					"arguments": "[format(' -rgName {0} -subID {1}', resourceGroup().name, subscription().subscriptionId)]",
-					"scriptContent": "param( [string] [Parameter(Mandatory=$true)] $rgName, [string] [Parameter(Mandatory=$true)] $subID); $ErrorActionPreference = 'Stop'; Set-AzContext -Subscription $subID; Set-AzDefault -ResourceGroupName $rgName; $vm = Get-AzVM -ResourceGroupName $rgName -Name 'App1'; Stop-AzVM -ResourceGroupName $rgName -Name $vm.Name -Force; $disk = Get-AzDisk -ResourceGroupName $rgName -DiskName 'snapshotDisk'; Set-AzVMOSDisk -VM $vm -ManagedDiskId $disk.Id -Name $disk.Name; Update-AzVM -ResourceGroupName $rgName -VM $vm; Start-AzVM -Name $vm.Name -ResourceGroupName $rgName;",
-					"cleanupPreference": "OnSuccess",
-					"retentionInterval": "P1D"
+		{
+			"type": "Microsoft.Compute/snapshots",
+			"apiVersion": "2019-03-01",
+			"name": "snapshot",
+			"location": "[resourceGroup().location]",
+			"dependsOn": [
+				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserToDC1WithRunCommand')]",
+				"[resourceId('Microsoft.Resources/deployments', 'AppServer')]",
+				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'APP1', 'addDomainUserToApp1WithRunCommand')]"
+			],
+			"properties": {
+				"creationData": {
+					"createOption": "Copy",
+					"sourceResourceId": "[resourceId('Microsoft.Compute/disks','primaryOsDisk')]"
 				}
 			}
+		},
+		{
+			"type": "Microsoft.Compute/disks",
+			"apiVersion": "2018-06-01",
+			"name": "snapshotDisk",
+			"location": "[resourceGroup().location]",
+			"sku": {
+				"name": "Standard_LRS"
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Compute/snapshots', 'snapshot')]"
+			],
+			"properties": {
+				"creationData": {
+					"createOption": "Copy",
+					"sourceResourceId": "[resourceId('Microsoft.Compute/snapshots','snapshot')]"
+				},
+				"diskSizeGB": 127
+			}
+		},
+		{
+			"type": "Microsoft.Resources/deploymentScripts",
+			"apiVersion": "2020-10-01",
+			"name": "osDiskSwap",
+			"location": "[resourceGroup().location]",
+			"dependsOn": [
+				"[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userIdentity'))]",
+				"[resourceId('Microsoft.Resources/deployments', 'ADDC')]",
+				"[resourceId('Microsoft.Resources/deployments', 'AppServer')]",
+				"[resourceId('Microsoft.Compute/disks', 'snapshotDisk')]",
+				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'APP1', 'resetApp1PasswordWithRunCommand')]",
+				"[resourceId('Microsoft.Authorization/roleAssignments', variables('bootstrapRoleAssignmentId'))]",
+				"[resourceId('Microsoft.Compute/snapshots', 'snapshot')]",
+				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'APP1', 'addDomainUserToApp1WithRunCommand')]"
+
+			],
+			"identity": {
+				"type": "UserAssigned",
+				"userAssignedIdentities": {
+					"[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('userIdentity')))]": {}
+				}
+			},
+			"kind": "AzurePowerShell",
+			"properties": {
+				"forceUpdateTag": "[parameters('utcValue')]",
+				"azPowerShellVersion": "3.0",
+				"timeout": "PT30M",
+				"arguments": "[format(' -rgName {0} -subID {1}', resourceGroup().name, subscription().subscriptionId)]",
+				"scriptContent": "param( [string] [Parameter(Mandatory=$true)] $rgName, [string] [Parameter(Mandatory=$true)] $subID); $ErrorActionPreference = 'Stop'; Set-AzContext -Subscription $subID; Set-AzDefault -ResourceGroupName $rgName; $vm = Get-AzVM -ResourceGroupName $rgName -Name 'App1'; Stop-AzVM -ResourceGroupName $rgName -Name $vm.Name -Force; $disk = Get-AzDisk -ResourceGroupName $rgName -DiskName 'snapshotDisk'; Set-AzVMOSDisk -VM $vm -ManagedDiskId $disk.Id -Name $disk.Name; Update-AzVM -ResourceGroupName $rgName -VM $vm; Start-AzVM -Name $vm.Name -ResourceGroupName $rgName;",
+				"cleanupPreference": "OnSuccess",
+				"retentionInterval": "P1D"
+			}
+		},
+		{
+			"type": "Microsoft.Compute/virtualMachines/runCommands",
+			"apiVersion": "2021-11-01",
+			"name": "[concat('DC1','/breakDC1ConnectivityWithRunCommand')]",
+			"location": "[resourceGroup().location]",
+			"dependsOn": [
+				"[resourceId('Microsoft.Resources/deploymentScripts', 'osDiskSwap')]"
+			],
+			"properties": {
+				"protectedParameters": [
+					{
+						"name": "pass",
+						"value": "[parameters('domainAccountPassword')]"
+					}
+				],
+				"source": {
+					"script": "[concat('$dn = $(Get-ADComputer ''app1'').distinguishedName; dsmod computer $dn -reset;')]"
+				},
+				"timeoutInSeconds": 60
+			}
+		}
 	],
 	"outputs": {
 		"adminUsername": {
