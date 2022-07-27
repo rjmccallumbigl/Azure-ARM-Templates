@@ -377,7 +377,6 @@
 			"name": "[concat('APP1','/addDomainUserToApp1WithRunCommand')]",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
-				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]",
 				"[concat('Microsoft.Resources/deployments/','AppServer')]"
 			],
 			"properties": {
