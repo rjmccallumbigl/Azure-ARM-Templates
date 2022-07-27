@@ -84,13 +84,6 @@
 				"description": "Auto-generated token to access _artifactsLocation."
 			},
 			"defaultValue": ""
-		},
-		"utcValue": {
-			"defaultValue": "[utcNow()]",
-			"type": "string",
-			"metadata": {
-				"description": "UTC"
-			}
 		}
 	},
 	"variables": {
@@ -384,47 +377,13 @@
 			"name": "[concat('APP1','/addDomainUserToApp1WithRunCommand')]",
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
-				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserToDC1WithRunCommand')]",
-				"[concat('Microsoft.Resources/deployments/','AppServer')]",
-				"[resourceId('Microsoft.Compute/virtualMachines', variables('VMs').appVmName)]"
-
+				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserWithRunCommand')]",
+				"[concat('Microsoft.Resources/deployments/','AppServer')]"
 			],
 			"properties": {
-				"protectedParameters": [
-					{
-						"name": "pass",
-						"value": "[parameters('domainAccountPassword')]"
-					}
-				],
 				"source": {
-					"script": "[concat('net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add; net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add;')]"
+					"script": "[concat('net localgroup \"remote desktop users\" \"', parameters('domainAccountUsername'), '\" /add; net localgroup \"administrators\" \"', parameters('domainAccountUsername'), '\" /add; Set-ItemProperty -Path ''HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp'' -Name ''UserAuthentication'' -Type DWord -Value 0;')]"
 				},
-				"timeoutInSeconds": 60
-			}
-		},
-		{
-			"type": "Microsoft.Compute/virtualMachines/runCommands",
-			"apiVersion": "2021-11-01",
-			"name": "[concat('APP1','/resetApp1PasswordWithRunCommand')]",
-			"location": "[resourceGroup().location]",
-			"dependsOn": [
-				"[resourceId('Microsoft.Resources/deployments', 'ADDC')]",
-				"[resourceId('Microsoft.Resources/deployments', 'AppServer')]",
-				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'DC1', 'addDomainUserToDC1WithRunCommand')]",
-				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'APP1', 'addDomainUserToApp1WithRunCommand')]"
-			],
-			"properties": {
-				"protectedParameters": [
-					{
-						"name": "pass",
-						"value": "[parameters('domainAccountPassword')]"
-					}
-				],
-				"source": {
-					"script": "[concat('net localgroup ''remote desktop users'' \"', parameters('domainAccountUsername'), '\" /add; net localgroup ''administrators'' \"', parameters('domainAccountUsername'), '\" /add; Start-Process -FilePath ''powershell'' -Verb RunAs -ArgumentList ''net user user1 badPassword! /domain''; Start-Process -FilePath ''PowerShell'' -Verb RunAs -ArgumentList ''netdom resetpwd /server:DC1 /userd:', parameters('domainName'),'\\user1 /passwordD:badPassword!; Start-Process -FilePath ''PowerShell'' -Verb RunAs -ArgumentList ''netdom resetpwd /server:DC1 /userd:', parameters('domainName'),'\\user1 /passwordD:badPassword!; Set-ItemProperty -Path ''HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Terminal Server\\WinStations\\RDP-Tcp'' -Name ''UserAuthentication'' -Type DWord -Value 0;')]"
-				},
-				"runAsUser": "[concat(parameters('domainName'), '\\', parameters('adminUsername'))]",
-				"runAsPassword": "[parameters('domainAccountPassword')]",
 				"timeoutInSeconds": 60
 			}
 		},
@@ -435,16 +394,9 @@
 			"location": "[resourceGroup().location]",
 			"dependsOn": [
 				"[resourceId('Microsoft.Resources/deployments', 'AppServer')]",
-				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'APP1', 'resetApp1PasswordWithRunCommand')]",
 				"[resourceId('Microsoft.Compute/virtualMachines/runCommands', 'APP1', 'addDomainUserToApp1WithRunCommand')]"
 			],
 			"properties": {
-				"protectedParameters": [
-					{
-						"name": "pass",
-						"value": "[parameters('domainAccountPassword')]"
-					}
-				],
 				"source": {
 					"script": "[concat('$dn = $(Get-ADComputer ''app1'').distinguishedName; dsmod computer $dn -reset;')]"
 				},
