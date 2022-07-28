@@ -66,7 +66,7 @@
 		"subnetName": "Subnet",
 		"subnetPrefix": "10.0.0.0/24",
 		"subnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('virtualNetworkName'), variables('subnetName'))]",
-		"vmName": "MyVM",
+		"vmName": "multipleNICS",
 		"virtualNetworkName": "MyVNET",
 		"publicIPAddressName": "myPublicIP",
 		"networkSecurityGroupName": "default-NSG"
@@ -229,6 +229,21 @@
 						"storageUri": "[concat('https://', parameters('storageUri'), '.blob.core.windows.net')]"
 					}
 				}
+			}
+		},
+		{
+			"type": "Microsoft.Compute/virtualMachines/runCommands",
+			"apiVersion": "2021-11-01",
+			"name": "[concat(variables('vmName'),'/addDomainUserWithRunCommand')]",
+			"location": "[resourceGroup().location]",
+			"dependsOn": [
+				"[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+			],
+			"properties": {
+				"source": {
+					"script": "[concat('$primaryIP = \"10.0.0.10\"; $secondaryIP = \"10.0.0.7\"; $index = (Get-NetAdapter -Name Ethernet*)[0].ifIndex; $name = (Get-NetAdapter -Name Ethernet*)[0].name; Set-DnsClientServerAddress -InterfaceIndex $index -ServerAddresses (\"168.63.129.16\"); Set-NetIPAddress -InterfaceIndex $index -PrefixLength 24; New-NetIPAddress -InterfaceIndex $index -IPAddress $secondaryIP -DefaultGateway \"10.0.0.1\" -PrefixLength 24 -AddressFamily IPv4 -SkipAsSource $false; New-NetIPAddress -InterfaceIndex $index -IPAddress $primaryIP -PrefixLength 24 -AddressFamily IPv4 -SkipAsSource $true;')]"
+				},
+				"timeoutInSeconds": 60
 			}
 		}
 	],
