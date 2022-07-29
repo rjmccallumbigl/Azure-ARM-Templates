@@ -42,8 +42,7 @@
             "version": "14393.5125.220505"
           },
           "osDisk": {
-            "createOption": "FromImage",
-            "name": "primaryOsDisk"
+            "createOption": "FromImage"
           }
         },
         "networkProfile": {
